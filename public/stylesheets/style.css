@@ -1,10 +1,14 @@
 body {
-  padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  background-color: #333
 }
 
-a {
-  color: #00B7FF;
+/* a { */
+  /* color: #00B7FF; */
+/* } */
+
+#filename {
+    color: #95a5a6;
 }
 
 #editor {

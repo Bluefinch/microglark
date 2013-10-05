@@ -106,7 +106,7 @@ window.onload = function () {
     editor.setReadOnly(true);
     editor.getSession().setUseSoftTabs(true);
     editor.getSession().setTabSize(2);
-    editor.getSession().setMode("ace/mode/coffee");
+    editor.getSession().setMode("ace/mode/javascript");
     editor.setTheme("ace/theme/glarkio_black");
 
     /* Initialize sharejs. */
@@ -116,7 +116,12 @@ window.onload = function () {
             return;
         }
         if (doc.created) {
-            doc.insert(0, "# Coffeescript editor!\\n\nexports.foo = ->\n  console.log 'hi!'");
+            doc.insert(0, "/* µglark.io is a minimalistic pair programing editor.\n" +
+               " * Share the url of this page " + window.location.toString() +
+               " with anybody,\n *  and start collaborating editing.\n" +
+               " * Drag and drop any file from your desktop here to open it.\n" +
+               " * Enjoy! */\n" +
+               " exports.glark = function () {\n    console.log('hi!');\n};");
         }
         doc.attach_ace(editor);
         editor.setReadOnly(false);
