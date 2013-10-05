@@ -11,3 +11,22 @@ a {
     width: 100%;
     height: 1000px;
 }
+
+.collaboration-selection-wrapper {
+    position: fixed;
+    z-index: 1;
+}
+
+.collaboration-selection {
+    width: 2px;
+    background-color: #ff7567;
+    height: 12pt;
+}
+
+.collaboration-selection-tooltip {
+    display: none;
+    position: relative;
+    top: -24pt;
+    padding: 0 3px;
+    background-color: #ff7567;
+}
