@@ -149,12 +149,11 @@ window.onload = function () {
 
     /* Socket.io events. */
     socket.on('selectionChange', function (data) {
-        if (data.documentId === documentId || true) {
-            console.log(data);
+        if (data.documentId === documentId) {
             var screenCoordinates = editor.renderer
             .textToScreenCoordinates(data.selection.start.row,
                 data.selection.start.column);
-            console.log(screenCoordinates);
+
             /* Update the selection css to the correct position. */
             var $selection = $('#collaboration-selection-' + data.userId);
             if ($selection.length === 0) {
