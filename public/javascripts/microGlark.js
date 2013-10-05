@@ -1,4 +1,4 @@
-/* global ace, sharejs, $, editor, socket, userId, documentId */
+/* global ace, sharejs, $, editor, socket, userId, documentId, escape, FileReader, sharedDocument */
 var makeRandomHash = function (length) {
     var chars, x;
     if (!length) {
@@ -52,22 +52,35 @@ var showTooltipForMarkup = function (markup, duration) {
     }
 };
 
+var setFilename = function (filename) {
+    document.getElementById('filename').innerText = filename;
+};
+
 var handleFileSelect = function (evt) {
     evt.stopPropagation();
     evt.preventDefault();
 
-    var files = evt.dataTransfer.files; // FileList object.
+    var files = evt.dataTransfer.files;
+    var file = files[0];
+    var filename = escape(file.name);
+    setFilename(filename);
+    socket.emit('filenameChange', filename);
 
-    // files is a FileList of File objects. List some properties.
-    var output = [];
-    for (var i = 0; i < files.length; ++i) {
-        var f = files[i];
-        output.push('<li><strong>', f.name, '</strong> (', f.type || 'n/a', ') - ',
-                f.size, ' bytes, last modified: ',
-                f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a',
-                '</li>');
-    }
-    document.getElementById('editor').innerHTML = '<ul>' + output.join('') + '</ul>';
+    var reader = new FileReader();
+    reader.onload = function (evt) {
+        var content = evt.target.result;
+        console.log(content);
+
+        editor.setReadOnly(true);
+        sharedDocument.detach_ace();
+        sharedDocument.del(0, sharedDocument.getLength(), function () {
+            sharedDocument.insert(0, content, function () {
+                sharedDocument.attach_ace(editor);
+                editor.setReadOnly(false);
+            });
+        });
+    };
+    reader.readAsText(file);
 };
 
 var handleDragOver = function (evt) {
@@ -84,7 +97,6 @@ window.onload = function () {
     }
 
     window.documentId = document.location.hash.slice(1);
-    var span = document.getElementById('documentId').innerText = documentId;
 
     /* Initialize socket.io */
     window.socket = io.connect();
@@ -108,6 +120,8 @@ window.onload = function () {
         }
         doc.attach_ace(editor);
         editor.setReadOnly(false);
+
+        window.sharedDocument = doc;
 
         editor.getSelection().on('changeCursor', onSelectionChange);
         editor.getSelection().on('changeSelection', onSelectionChange);
@@ -157,6 +171,10 @@ window.onload = function () {
                 showTooltipForMarkup($selection, 2000);
             }
         }
+    });
+
+    socket.on('filenameChange', function (filename) {
+        setFilename(filename);
     });
 
     /* Make the body a drop zone. */

@@ -41,8 +41,12 @@ server.listen(app.get('port'), function () {
 
 sio.sockets.on('connection', function (socket) {
     console.log('Websocket connection.');
+
     socket.on('selectionChange', function (data) {
-        console.log(data);
         socket.broadcast.emit('selectionChange', data);
+    });
+
+    socket.on('filenameChange', function (data) {
+        socket.broadcast.emit('filenameChange', data);
     });
 });

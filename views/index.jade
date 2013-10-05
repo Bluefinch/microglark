@@ -1,14 +1,10 @@
 extends layout
 
 block content
-    //
-        h1= title
-        p Welcome to #{title}
     #header
       #htext
-        | Editing
-        b#documentId ...
-        a(style='padding-left: 50px;', href='/') New
+        b#filename Scratch
+        a(style='padding-left: 50px;', href='/' target="_blank") New micro glark
     #editor Loading...
     script(src='//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js');
     script(src='/socket.io/socket.io.js')
