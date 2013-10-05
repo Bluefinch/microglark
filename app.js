@@ -29,7 +29,10 @@ if ('development' == app.get('env')) {
 app.get('/', routes.index);
 
 var server = http.createServer(app);
+
 var sio = socketio.listen(server);
+sio.set('log level', 0);
+sio.set('transports', ['xhr-polling']);
 
 /* Attach the sharjs REST and Socket.io interfaces to the server. */
 var sharejsOptions = {db: {type: 'none'}};
