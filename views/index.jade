@@ -1,14 +1,13 @@
 extends layout
 
 block content
-    .container
-        .row
-            .col-md-12
-                #header
-                  #htext
-                    b#filename Scratch.js
-                    a.pull-right.btn.btn-primary(href='/' target="_blank") New micro glark
-                #editor Loading...
+
+    #header
+      #htext
+        #filename Scratch.js
+        a.pull-right.btn.btn-primary(href='/' target="_blank") +
+    #editor Loading...
+    
     script(src='//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js');
     script(src='/socket.io/socket.io.js')
     script(src='/javascripts/lib/ace/ace.js')

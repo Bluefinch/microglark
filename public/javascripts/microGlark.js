@@ -54,6 +54,7 @@ var showTooltipForMarkup = function (markup, duration) {
 
 var setFilename = function (filename) {
     document.getElementById('filename').innerText = filename;
+    document.title = 'µGlark.io - ' + filename;
 };
 
 var handleFileSelect = function (evt) {
@@ -64,12 +65,14 @@ var handleFileSelect = function (evt) {
     var file = files[0];
     var filename = escape(file.name);
     setFilename(filename);
-    socket.emit('filenameChange', filename);
+    socket.emit('filenameChange', {
+        filename: filename,
+        documentId: documentId
+    });
 
     var reader = new FileReader();
     reader.onload = function (evt) {
         var content = evt.target.result;
-        console.log(content);
 
         editor.setReadOnly(true);
         sharedDocument.detach_ace();
@@ -104,6 +107,7 @@ window.onload = function () {
     /* Initialize ace. */
     var editor = window.editor = ace.edit("editor");
     editor.setReadOnly(true);
+    editor.getSession().setUseWrapMode(true);
     editor.getSession().setUseSoftTabs(true);
     editor.getSession().setTabSize(2);
     editor.getSession().setMode("ace/mode/javascript");
@@ -177,8 +181,10 @@ window.onload = function () {
         }
     });
 
-    socket.on('filenameChange', function (filename) {
-        setFilename(filename);
+    socket.on('filenameChange', function (data) {
+        if (data.documentId === documentId) {
+            setFilename(data.filename);
+        }
     });
 
     /* Make the body a drop zone. */

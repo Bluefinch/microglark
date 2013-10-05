@@ -4,5 +4,7 @@
  */
 
 exports.index = function (req, res) {
-    res.render('index', { title: 'µGlark.io' });
+    res.render('index', { 
+        title: 'µGlark.io - Scratch.js' 
+    });
 };
