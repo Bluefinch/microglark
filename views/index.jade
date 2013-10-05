@@ -1,0 +1,20 @@
+extends layout
+
+block content
+    //
+        h1= title
+        p Welcome to #{title}
+    #header
+      #htext
+        | Editing
+        b#docname ...
+        a(style='padding-left: 50px;', href='/') New
+    #editor Loading...
+    script(src='javascripts/lib/ace/ace.js')
+    script(src='javascripts/lib/ace/mode-coffee.js')
+    script(src='javascripts/lib/ace/theme-idle_fingers.js')
+    script(src='javascripts/lib/share/bcsocket.js')
+    script(src='javascripts/lib/share/webclient/share.uncompressed.js')
+    script(src='javascripts/lib/share/webclient/ace.js')
+    script(src='javascripts/microGlark.js')
+
