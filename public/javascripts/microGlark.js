@@ -1,5 +1,8 @@
-/* global ace, sharejs, $, editor, socket, userId, documentId, escape, FileReader, sharedDocument, currentFilename */
+/* global io, ace, sharejs, $, editor, socket, userId, documentId, escape, 
+FileReader, sharedDocument, currentFilename, defaultFile */
+'use strict';
 
+window.editor = null;
 window.currentFilename = null;
 window.documentId = null;
 window.sharedDocument = null;
@@ -117,18 +120,27 @@ var showTooltipForMarkup = function (markup, duration) {
     }
 };
 
-var setFilename = function (filename) {
-    document.getElementById('filename').innerText = filename;
-    document.title = 'µGlark.io - ' + filename;
-    window.currentFilename = filename;
-};
-
 var getAceMode = function (filename) {
     var fileExtension = 'unknown';
     if (filename.indexOf('.') !== -1) {
         fileExtension = filename.split('.').pop();
     }
     return filetype.getAceModeFromExtension(fileExtension);
+};
+
+var setFilename = function (filename) {
+    if (filename !== currentFilename) {
+        /* Update document. */
+        document.getElementById('filename').innerText = filename;
+        document.title = 'µGlark.io - ' + filename;
+
+        /* Update ace mode. */
+        var mode = getAceMode(filename);
+        editor.getSession().setMode(mode);
+
+        /* Save filename.*/
+        window.currentFilename = filename;
+    }
 };
 
 var handleFileSelect = function (evt) {
@@ -139,28 +151,20 @@ var handleFileSelect = function (evt) {
     var file = files[0];
     var filename = escape(file.name);
     setFilename(filename);
-    
-    /* Get ace mode. */
-    var mode = getAceMode(filename);
-    
+
     /* Notify. */
-    socket.emit('filenameChange', {
-        filename: filename,
-        mode: mode,
-        documentId: documentId
-    });
-    
+    socket.emit('notifyFilename', filename);
+
     /* Update contents. */
     var reader = new FileReader();
     reader.onload = function (evt) {
         var content = evt.target.result;
-        
+
         editor.setReadOnly(true);
         sharedDocument.detach_ace();
         sharedDocument.del(0, sharedDocument.getLength(), function () {
             sharedDocument.insert(0, content, function () {
                 sharedDocument.attach_ace(editor);
-                editor.getSession().setMode(mode);
                 editor.session.setScrollTop(0);
                 editor.setReadOnly(false);
             });
@@ -191,12 +195,12 @@ window.onload = function () {
     /* Initialize ace. */
     var editor = window.editor = ace.edit("editor");
     editor.setReadOnly(true);
+    editor.setShowPrintMargin(false);
     editor.getSession().setUseWrapMode(true);
     editor.getSession().setUseSoftTabs(true);
     editor.getSession().setTabSize(2);
-    editor.getSession().setMode("ace/mode/javascript");
     editor.setTheme("ace/theme/glarkio_black");
-    
+
     /* Initialize sharejs. */
     sharejs.open(documentId, 'text', function (error, doc) {
         if (error) {
@@ -204,12 +208,8 @@ window.onload = function () {
             return;
         }
         if (doc.created) {
-            doc.insert(0, "/* µglark.io is a minimalistic pair programing editor.\n" +
-               " * Share the url of this page " + window.location.toString() +
-               " with anybody,\n *  and start collaborating editing.\n" +
-               " * Drag and drop any file from your desktop here to open it.\n" +
-               " * Enjoy! */\n" +
-               " exports.glark = function () {\n    console.log('hi!');\n};");
+            doc.insert(0, defaultFile.content);
+            setFilename(defaultFile.filename);
         } else {
             socket.emit('requestFilename');
         }
@@ -230,8 +230,8 @@ window.onload = function () {
     socket.on('selectionChange', function (data) {
         if (data.documentId === documentId) {
             var screenCoordinates = editor.renderer
-            .textToScreenCoordinates(data.selection.start.row,
-                data.selection.start.column);
+                .textToScreenCoordinates(data.selection.start.row,
+                    data.selection.start.column);
 
             /* Update the selection css to the correct position. */
             var $selection = $('#collaboration-selection-' + data.userId);
@@ -256,44 +256,31 @@ window.onload = function () {
         }
     });
 
-    socket.on('filenameChange', function (data) {
-        if (data.documentId === documentId) {
-            setFilename(data.filename);
-            editor.getSession().setMode(data.mode);
-        }
+
+    socket.on('notifyFilename', function (filename) {
+        setFilename(filename);
     });
-    
-    socket.on('notifyFilename', function (data) {
-        if (!currentFilename && data.documentId === documentId) {
-            setFilename(data.filename);
-            editor.getSession().setMode(data.mode);
-        }
-    });
-    
-    socket.on('requestFilename', function (data) {
+
+    socket.on('requestFilename', function () {
         if (currentFilename) {
-            socket.emit('notifyFilename', {
-                filename: currentFilename,
-                mode: getAceMode(currentFilename),
-                documentId: documentId
-            });
+            socket.emit('notifyFilename', currentFilename);
         }
     });
-    
+
     /* Bind some ui events. */
     $(document).on('mouseenter',
-            '.collaboration-selection,.collaboration-selection-tooltip',
-            function () {
-                var markup = $(this).parent();
-                showTooltipForMarkup(markup);
-            });
+        '.collaboration-selection,.collaboration-selection-tooltip',
+        function () {
+            var markup = $(this).parent();
+            showTooltipForMarkup(markup);
+        });
 
     $(document).on('mouseleave',
-            '.collaboration-selection,.collaboration-selection-tooltip',
-            function () {
-                var markup = $(this).parent();
-                showTooltipForMarkup(markup, 500);
-            });
+        '.collaboration-selection,.collaboration-selection-tooltip',
+        function () {
+            var markup = $(this).parent();
+            showTooltipForMarkup(markup, 500);
+        });
 
     /* Make the body a drop zone. */
     var body = document.body;

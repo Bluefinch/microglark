@@ -1,47 +1,83 @@
 /* Layout */
 
-#header {
+#container {
     position: fixed;
     top: 0;
+    bottom: 0;
     left: 50%;
-    height: 32px;
+    
+    background-color: #383838;
+}
+
+#header {
+    position: absolute;
+    top: 0;
+    height: 35px;
+    width: 100%;
+    
+    overflow: hidden;
+    border-bottom: 2px solid #33555E;
 }
 
 #editor {
-    position: fixed;
-    top: 32px;
-    left: 50%;
-    bottom: 0;
+    position: absolute;
+    top: 40px;
+    bottom: 40px;
+    width: 100%;
 }
 
-#editor,
-#header {
+#footer {
+    position: absolute;
+    height: 35px;
+    bottom: 0;
+    width: 100%;
+    
+    overflow: hidden;
+    border-top: 2px solid #33555E;
+}
+
+
+#container {
     width: 100%;
     margin-left: -50%;
 }
 
 @media (min-width: 768px) {
-    #editor,
-    #header {
+    #container {
         width: 720px;
         margin-left: -360px;
     }
 }
 
 @media (min-width: 992px) {
-    #editor,
-    #header {
+    #container {
         width: 910px;
         margin-left: -455px;
     }
 }
 
-
 @media (min-width: 1200px) {
-    #editor,
-    #header {
+    #container {
         width: 1130px;
         margin-left: -565px;
+    }
+}
+
+/* Ace */
+
+@media (min-width: 768px) {
+    .ace_content {
+        width: 100% !important;
+    }
+    
+    .ace_scrollbar {
+        position: fixed !important;
+        top: 0 !important;
+        height: 100% !important;
+    }
+    
+    .ace_scroller {
+        right: 0 !important;
     }
 }
 
@@ -49,31 +85,33 @@
 
 body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-  background-color: #333
+  background-color: #333;
+  color: white;
+}
+
+a {
+    text-decoration: initial;
+    color: white;
 }
 
 #header a {
-    background-color: #383838;
-    border: 0;
-    border-radius: 0;
-    padding: 3px 12px;
+    display: inline-block;
+    float: right;
+    height: 35px;
+    padding: 6px 12px;
     font-size: 19px;
 }
 
 #header a:hover {
-    background-color: #4E4E4E;
+    background-color: #33555E;
 }
 
 #filename {
-    background-color: #383838;
     display: inline-block;
-    padding: 8px 12px;
+    height: 35px;
+    padding: 10px 12px;
     color: white;
     font-weight: bold;
-}
-
-#editor {
-    background-color: #383838;
 }
 
 .collaboration-selection-wrapper {
@@ -95,20 +133,18 @@ body {
     background-color: #ff7567;
 }
 
-/* Ace */
+#footer a {
+    float: left;
+    margin-top: 9px;
+    margin-left: 9px;
+    color: rgb(104, 104, 104);
+}
 
-@media (min-width: 768px) {
-    .ace_content {
-        width: 100% !important;
-    }
-    
-    .ace_scrollbar {
-        position: fixed !important;
-        top: 0 !important;
-        height: 100% !important;
-    }
-    
-    .ace_scroller {
-        right: 0 !important;
-    }
+#footer a:hover {
+    color: rgb(179, 179, 179);
+}
+
+#footer .star {
+    float: right;
+    margin-top: 8px;
 }

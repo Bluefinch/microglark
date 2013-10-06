@@ -2,7 +2,16 @@ doctype 5
 html
   head
     title= title
-    link(rel='stylesheet', href='//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css');
+    link(rel='stylesheet', href='/stylesheets/reset.css');
     link(rel='stylesheet', href='/stylesheets/style.css')
   body
     block content
+    
+    script(src='//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js');
+    script(src='/socket.io/socket.io.js')
+    script(src='/javascripts/lib/ace/ace.js')
+    script(src='/javascripts/lib/share/bcsocket.js')
+    script(src='/javascripts/lib/share/webclient/share.uncompressed.js')
+    script(src='/javascripts/lib/share/webclient/ace.js')
+    script(src='/javascripts/defaults/' + defaultFile)
+    script(src='/javascripts/microGlark.js')

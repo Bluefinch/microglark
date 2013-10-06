@@ -28,6 +28,7 @@ if ('development' === app.get('env')) {
 }
 
 app.get('/', routes.index);
+app.get('/about', routes.about);
 
 var server = http.createServer(app);
 
@@ -49,6 +50,7 @@ server.listen(app.get('port'), function () {
 
 sio.sockets.on('connection', function (socket) {
     console.log('Websocket connection.');
+
     socket.on('join', function (documentId) {
         socket.set('documentId', documentId, function () {
             socket.join(documentId);
@@ -57,40 +59,21 @@ sio.sockets.on('connection', function (socket) {
 
     socket.on('selectionChange', function (data) {
         socket.get('documentId', function (err, documentId) {
-            if (err) {
-                return console.log(err);
-            }
-
+            if (err) return console.log(err);
             socket.broadcast.to(documentId).emit('selectionChange', data);
-        });
-    });
-
-    socket.on('filenameChange', function (data) {
-        socket.get('documentId', function (err, documentId) {
-            if (err) {
-                return console.log(err);
-            }
-
-            socket.broadcast.to(documentId).emit('filenameChange', data);
         });
     });
 
     socket.on('requestFilename', function () {
         socket.get('documentId', function (err, documentId) {
-            if (err) {
-                return console.log(err);
-            }
-
+            if (err) return console.log(err);
             socket.broadcast.to(documentId).emit('requestFilename');
         });
     });
 
     socket.on('notifyFilename', function (data) {
         socket.get('documentId', function (err, documentId) {
-            if (err) {
-                return console.log(err);
-            }
-
+            if (err) return console.log(err);
             socket.broadcast.to(documentId).emit('notifyFilename', data);
         });
     });

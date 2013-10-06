@@ -2,17 +2,12 @@ extends layout
 
 block content
 
-    #header
-      #htext
-        #filename Scratch.js
-        a.pull-right.btn.btn-primary(href='/' target="_blank") +
-    #editor Loading...
-    
-    script(src='//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js');
-    script(src='/socket.io/socket.io.js')
-    script(src='/javascripts/lib/ace/ace.js')
-    script(src='/javascripts/lib/share/bcsocket.js')
-    script(src='/javascripts/lib/share/webclient/share.uncompressed.js')
-    script(src='/javascripts/lib/share/webclient/ace.js')
-    script(src='/javascripts/microGlark.js')
+    #container
+        #header
+            #filename Loading...
+            a(href='/' target="_blank") +
+        #editor Loading...
+        #footer
+            a(href='/about') About µGlark.io
+            iframe.star(src="http://ghbtns.com/github-btn.html?user=Bluefinch&repo=microglark&type=watch&count=true&size=small" allowtransparency="true" frameborder="0" scrolling="0" width="88" height="20")
 

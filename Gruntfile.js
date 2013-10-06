@@ -9,7 +9,7 @@ module.exports = function (grunt) {
         jsfiles: [
             'Gruntfile.js',
             'app.js',
-            'public/javascript/*.js'
+            'public/javascripts/*.js'
         ],
 
         jsbeautifier: {
@@ -22,7 +22,6 @@ module.exports = function (grunt) {
         jshint: {
             options: {
                 /* camelcase: true, */
-                curly: true,
                 eqeqeq: true,
                 indent: 4,
                 latedef: true,
