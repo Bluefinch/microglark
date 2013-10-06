@@ -131,7 +131,7 @@ var getAceMode = function (filename) {
 var setFilename = function (filename) {
     if (filename !== currentFilename) {
         /* Update document. */
-        document.getElementById('filename').innerText = filename;
+        $('#filename').html(filename);
         document.title = 'µGlark.io - ' + filename;
 
         /* Update ace mode. */
