@@ -1,5 +1,9 @@
 /* global ace, sharejs, $, editor, socket, userId, documentId, escape, FileReader, sharedDocument, currentFilename */
 
+window.currentFilename = null;
+window.documentId = null;
+window.sharedDocument = null;
+
 var filetype = function () {
     // https://github.com/ajaxorg/ce/blob/master/demo/kitchen-sink/demo.js#L68
     var aceModes = {
