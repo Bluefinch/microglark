@@ -1,3 +1,5 @@
+'use strict';
+
 var express = require('express');
 var routes = require('./routes');
 var http = require('http');
@@ -21,7 +23,7 @@ app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // development only
-if ('development' == app.get('env')) {
+if ('development' === app.get('env')) {
     app.use(express.errorHandler());
 }
 
@@ -34,9 +36,13 @@ sio.set('log level', 0);
 sio.set('transports', ['xhr-polling']);
 
 /* Attach the sharjs REST and Socket.io interfaces to the server. */
-var sharejsOptions = {db: {type: 'none'}};
+var sharejsOptions = {
+    db: {
+        type: 'none'
+    }
+};
 sharejs.server.attach(app, sharejsOptions);
-    
+
 server.listen(app.get('port'), function () {
     console.log('Express server listening on port ' + app.get('port'));
 });
@@ -68,7 +74,7 @@ sio.sockets.on('connection', function (socket) {
             socket.broadcast.to(documentId).emit('filenameChange', data);
         });
     });
-    
+
     socket.on('requestFilename', function () {
         socket.get('documentId', function (err, documentId) {
             if (err) {
@@ -78,7 +84,7 @@ sio.sockets.on('connection', function (socket) {
             socket.broadcast.to(documentId).emit('requestFilename');
         });
     });
-    
+
     socket.on('notifyFilename', function (data) {
         socket.get('documentId', function (err, documentId) {
             if (err) {

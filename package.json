@@ -9,6 +9,11 @@
     "express": "3.3.4",
     "jade": "*",
     "share": "~0.6.3",
-    "socket.io": "~0.9.16"
+    "socket.io": "~0.9.16",
+    "grunt": "~0.4.1"
+  },
+  "devDependencies": {
+    "grunt-jsbeautifier": "~0.1.9",
+    "grunt-contrib-jshint": "~0.6.4"
   }
 }
