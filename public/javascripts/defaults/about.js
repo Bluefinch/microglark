@@ -9,5 +9,4 @@ window.defaultFile = {
         "\n"+
         "## Repo\n"+
         "http://github.com/Bluefinch/microglark/"
-        
 };
