@@ -8,7 +8,6 @@ window.documentId = null;
 window.sharedDocument = null;
 
 var filetype = function () {
-    // https://github.com/ajaxorg/ce/blob/master/demo/kitchen-sink/demo.js#L68
     var aceModes = {
         coffee: ["CoffeeScript", "coffee"],
         coldfusion: ["ColdFusion", "cfm"],
@@ -180,7 +179,7 @@ var handleDragOver = function (evt) {
     evt.dataTransfer.dropEffect = 'copy';
 };
 
-window.onload = function () {
+$(function () {
     window.userId = makeRandomHash(5);
 
     /* Get or make docummentId. */
@@ -256,7 +255,6 @@ window.onload = function () {
         }
     });
 
-
     socket.on('notifyFilename', function (filename) {
         setFilename(filename);
     });
@@ -286,4 +284,4 @@ window.onload = function () {
     var body = document.body;
     body.addEventListener('dragover', handleDragOver, false);
     body.addEventListener('drop', handleFileSelect, false);
-};
+});
