@@ -161,6 +161,7 @@ var handleFileSelect = function (evt) {
             sharedDocument.insert(0, content, function () {
                 sharedDocument.attach_ace(editor);
                 editor.getSession().setMode(mode);
+                editor.session.setScrollTop(0);
                 editor.setReadOnly(false);
             });
         });
@@ -172,7 +173,7 @@ var handleDragOver = function (evt) {
     evt.stopPropagation();
     evt.preventDefault();
     /* Explicitly show this is a copy. */
-    evt.dataTransfer.dropEffect = 'copy'; 
+    evt.dataTransfer.dropEffect = 'copy';
 };
 
 window.onload = function () {
@@ -222,6 +223,10 @@ window.onload = function () {
     });
 
     /* Socket.io events. */
+    socket.on('connect', function () {
+        socket.emit('join', documentId);
+    });
+
     socket.on('selectionChange', function (data) {
         if (data.documentId === documentId) {
             var screenCoordinates = editor.renderer
@@ -259,14 +264,14 @@ window.onload = function () {
     });
     
     socket.on('notifyFilename', function (data) {
-        if(!currentFilename && data.documentId === documentId) {
+        if (!currentFilename && data.documentId === documentId) {
             setFilename(data.filename);
             editor.getSession().setMode(data.mode);
         }
     });
     
     socket.on('requestFilename', function (data) {
-        if(currentFilename) {
+        if (currentFilename) {
             socket.emit('notifyFilename', {
                 filename: currentFilename,
                 mode: getAceMode(currentFilename),

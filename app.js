@@ -43,20 +43,49 @@ server.listen(app.get('port'), function () {
 
 sio.sockets.on('connection', function (socket) {
     console.log('Websocket connection.');
+    socket.on('join', function (documentId) {
+        socket.set('documentId', documentId, function () {
+            socket.join(documentId);
+        });
+    });
 
     socket.on('selectionChange', function (data) {
-        socket.broadcast.emit('selectionChange', data);
+        socket.get('documentId', function (err, documentId) {
+            if (err) {
+                return console.log(err);
+            }
+
+            socket.broadcast.to(documentId).emit('selectionChange', data);
+        });
     });
 
     socket.on('filenameChange', function (data) {
-        socket.broadcast.emit('filenameChange', data);
+        socket.get('documentId', function (err, documentId) {
+            if (err) {
+                return console.log(err);
+            }
+
+            socket.broadcast.to(documentId).emit('filenameChange', data);
+        });
     });
     
     socket.on('requestFilename', function () {
-        socket.broadcast.emit('requestFilename');
+        socket.get('documentId', function (err, documentId) {
+            if (err) {
+                return console.log(err);
+            }
+
+            socket.broadcast.to(documentId).emit('requestFilename');
+        });
     });
     
     socket.on('notifyFilename', function (data) {
-        socket.broadcast.emit('notifyFilename', data);
+        socket.get('documentId', function (err, documentId) {
+            if (err) {
+                return console.log(err);
+            }
+
+            socket.broadcast.to(documentId).emit('notifyFilename', data);
+        });
     });
 });
