@@ -52,4 +52,12 @@ sio.sockets.on('connection', function (socket) {
     socket.on('filenameChange', function (data) {
         socket.broadcast.emit('filenameChange', data);
     });
+    
+    socket.on('requestFilename', function () {
+        socket.broadcast.emit('requestFilename');
+    });
+    
+    socket.on('notifyFilename', function (data) {
+        socket.broadcast.emit('notifyFilename', data);
+    });
 });

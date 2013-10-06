@@ -1,4 +1,65 @@
-/* global ace, sharejs, $, editor, socket, userId, documentId, escape, FileReader, sharedDocument */
+/* global ace, sharejs, $, editor, socket, userId, documentId, escape, FileReader, sharedDocument, currentFilename */
+
+var filetype = function () {
+    // https://github.com/ajaxorg/ce/blob/master/demo/kitchen-sink/demo.js#L68
+    var aceModes = {
+        coffee: ["CoffeeScript", "coffee"],
+        coldfusion: ["ColdFusion", "cfm"],
+        csharp: ["C#", "cs"],
+        css: ["CSS", "css"],
+        diff: ["Diff", "diff|patch"],
+        golang: ["Go", "go"],
+        groovy: ["Groovy", "groovy"],
+        haxe: ["haXe", "hx"],
+        html: ["HTML", "htm|html|xhtml"],
+        c_cpp: ["C/C++", "c|cc|cpp|cxx|h|hh|hpp"],
+        clojure: ["Clojure", "clj"],
+        java: ["Java", "java"],
+        javascript: ["JavaScript", "js"],
+        json: ["JSON", "json"],
+        latex: ["LaTeX", "latex|tex|ltx|bib"],
+        less: ["LESS", "less"],
+        liquid: ["Liquid", "liquid"],
+        lua: ["Lua", "lua"],
+        markdown: ["Markdown", "md|markdown"],
+        ocaml: ["OCaml", "ml|mli"],
+        perl: ["Perl", "pl|pm"],
+        pgsql: ["pgSQL", "pgsql"],
+        php: ["PHP", "php|phtml"],
+        powershell: ["Powershell", "ps1"],
+        python: ["Python", "py"],
+        ruby: ["Ruby", "ru|gemspec|rake|rb"],
+        scad: ["OpenSCAD", "scad"],
+        scala: ["Scala", "scala"],
+        scss: ["SCSS", "scss|sass"],
+        sh: ["SH", "sh|bash|bat"],
+        sql: ["SQL", "sql"],
+        svg: ["SVG", "svg"],
+        text: ["Text", "txt"],
+        textile: ["Textile", "textile"],
+        xml: ["XML", "xml|rdf|rss|wsdl|xslt|atom|mathml|mml|xul|xbl"],
+        xquery: ["XQuery", "xq"],
+        yaml: ["YAML", "yaml"]
+    };
+
+    var ext2mode = {};
+    Object.keys(aceModes).forEach(function (key) {
+        var value = aceModes[key];
+        var extensions = value[1].split('|');
+        extensions.forEach(function (extension) {
+            ext2mode[extension] = key;
+        });
+    });
+    return {
+        getAceModeFromExtension: function (extension) {
+            if (ext2mode[extension] !== undefined) {
+                return 'ace/mode/' + ext2mode[extension];
+            }
+            return 'ace/mode/text';
+        }
+    };
+}();
+
 var makeRandomHash = function (length) {
     var chars, x;
     if (!length) {
@@ -55,6 +116,15 @@ var showTooltipForMarkup = function (markup, duration) {
 var setFilename = function (filename) {
     document.getElementById('filename').innerText = filename;
     document.title = 'µGlark.io - ' + filename;
+    window.currentFilename = filename;
+};
+
+var getAceMode = function (filename) {
+    var fileExtension = 'unknown';
+    if (filename.indexOf('.') !== -1) {
+        fileExtension = filename.split('.').pop();
+    }
+    return filetype.getAceModeFromExtension(fileExtension);
 };
 
 var handleFileSelect = function (evt) {
@@ -65,20 +135,28 @@ var handleFileSelect = function (evt) {
     var file = files[0];
     var filename = escape(file.name);
     setFilename(filename);
+    
+    /* Get ace mode. */
+    var mode = getAceMode(filename);
+    
+    /* Notify. */
     socket.emit('filenameChange', {
         filename: filename,
+        mode: mode,
         documentId: documentId
     });
-
+    
+    /* Update contents. */
     var reader = new FileReader();
     reader.onload = function (evt) {
         var content = evt.target.result;
-
+        
         editor.setReadOnly(true);
         sharedDocument.detach_ace();
         sharedDocument.del(0, sharedDocument.getLength(), function () {
             sharedDocument.insert(0, content, function () {
                 sharedDocument.attach_ace(editor);
+                editor.getSession().setMode(mode);
                 editor.setReadOnly(false);
             });
         });
@@ -89,16 +167,17 @@ var handleFileSelect = function (evt) {
 var handleDragOver = function (evt) {
     evt.stopPropagation();
     evt.preventDefault();
-    evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+    /* Explicitly show this is a copy. */
+    evt.dataTransfer.dropEffect = 'copy'; 
 };
 
 window.onload = function () {
     window.userId = makeRandomHash(5);
 
+    /* Get or make docummentId. */
     if (!document.location.hash) {
         document.location.hash = '#' + makeRandomHash();
     }
-
     window.documentId = document.location.hash.slice(1);
 
     /* Initialize socket.io */
@@ -112,7 +191,7 @@ window.onload = function () {
     editor.getSession().setTabSize(2);
     editor.getSession().setMode("ace/mode/javascript");
     editor.setTheme("ace/theme/glarkio_black");
-
+    
     /* Initialize sharejs. */
     sharejs.open(documentId, 'text', function (error, doc) {
         if (error) {
@@ -126,6 +205,8 @@ window.onload = function () {
                " * Drag and drop any file from your desktop here to open it.\n" +
                " * Enjoy! */\n" +
                " exports.glark = function () {\n    console.log('hi!');\n};");
+        } else {
+            socket.emit('requestFilename');
         }
         doc.attach_ace(editor);
         editor.setReadOnly(false);
@@ -135,21 +216,6 @@ window.onload = function () {
         editor.getSelection().on('changeCursor', onSelectionChange);
         editor.getSelection().on('changeSelection', onSelectionChange);
     });
-
-    /* Bind some ui events. */
-    $(document).on('mouseenter',
-            '.collaboration-selection,.collaboration-selection-tooltip',
-            function () {
-                var markup = $(this).parent();
-                showTooltipForMarkup(markup);
-            });
-
-    $(document).on('mouseleave',
-            '.collaboration-selection,.collaboration-selection-tooltip',
-            function () {
-                var markup = $(this).parent();
-                showTooltipForMarkup(markup, 500);
-            });
 
     /* Socket.io events. */
     socket.on('selectionChange', function (data) {
@@ -184,8 +250,41 @@ window.onload = function () {
     socket.on('filenameChange', function (data) {
         if (data.documentId === documentId) {
             setFilename(data.filename);
+            editor.getSession().setMode(data.mode);
         }
     });
+    
+    socket.on('notifyFilename', function (data) {
+        if(!currentFilename && data.documentId === documentId) {
+            setFilename(data.filename);
+            editor.getSession().setMode(data.mode);
+        }
+    });
+    
+    socket.on('requestFilename', function (data) {
+        if(currentFilename) {
+            socket.emit('notifyFilename', {
+                filename: currentFilename,
+                mode: getAceMode(currentFilename),
+                documentId: documentId
+            });
+        }
+    });
+    
+    /* Bind some ui events. */
+    $(document).on('mouseenter',
+            '.collaboration-selection,.collaboration-selection-tooltip',
+            function () {
+                var markup = $(this).parent();
+                showTooltipForMarkup(markup);
+            });
+
+    $(document).on('mouseleave',
+            '.collaboration-selection,.collaboration-selection-tooltip',
+            function () {
+                var markup = $(this).parent();
+                showTooltipForMarkup(markup, 500);
+            });
 
     /* Make the body a drop zone. */
     var body = document.body;
