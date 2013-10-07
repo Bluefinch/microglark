@@ -30,8 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 /* 404 like middleware. Route everything that was not answered yet to the main
  * page, except the 'channel' url used by sharejs. */
 app.use(function (req, res, next) {
-    var matched = req.path.match(/^\/(\w+).*$/);
-    if (matched && matched[1] === 'channel') {
+    if (req.path.length > 7 && req.path.substr(1, 7) === 'channel') {
         next();
     } else {
         res.redirect('/');
