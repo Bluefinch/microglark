@@ -5,7 +5,7 @@ window.defaultFile = {
         "µGlark.io\n"+
         "\n"+
         "## Authors\n" +
-        "Florent Galland & Luc Verdier\n"+
+        "@Flolagale & @Verdier\n"+
         "\n"+
         "## Repo\n"+
         "http://github.com/Bluefinch/microglark/"
