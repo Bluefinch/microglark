@@ -15,10 +15,9 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.use(express.favicon());
 app.use(express.logger('dev'));
-app.use(express.bodyParser());
+app.use(express.compress());
 app.use(express.methodOverride());
-app.use(express.cookieParser('aerg68nu8itk6'));
-app.use(express.session());
+app.use(express.bodyParser());
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -33,7 +32,8 @@ app.get('/about', routes.about);
 var server = http.createServer(app);
 
 var sio = socketio.listen(server);
-sio.set('log level', 0);
+sio.enable('browser client etag');
+sio.set('log level', 1);
 sio.set('transports', ['xhr-polling']);
 
 /* Attach the sharjs REST and Socket.io interfaces to the server. */
