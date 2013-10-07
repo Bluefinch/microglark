@@ -228,7 +228,7 @@ $(function () {
 
     /* Socket.io events. */
     socket.on('connect', function () {
-        socket.emit('join', documentId);
+        socket.emit('join', {documentId: documentId, userId: userId});
     });
 
     socket.on('selectionChange', function (data) {
@@ -255,7 +255,7 @@ $(function () {
                     top: screenCoordinates.pageY
                 });
 
-                showTooltipForMarkup($selection, 2000);
+                showTooltipForMarkup($selection, 500);
             }
         }
     });
@@ -267,6 +267,14 @@ $(function () {
     socket.on('requestFilename', function () {
         if (currentFilename) {
             socket.emit('notifyFilename', currentFilename);
+        }
+    });
+
+    socket.on('collaboratorDisconnect', function (userId) {
+        /* Remove the collaborator selection. */
+        var $selection = $('#collaboration-selection-' + userId);
+        if ($selection.length !== 0) {
+            $selection.remove();
         }
     });
 
