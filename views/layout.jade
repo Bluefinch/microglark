@@ -1,20 +1,25 @@
 doctype 5
-html
+html.wf-sourcecodepro-n4-active.wf-sourcecodepro-n7-active.wf-active
   head
     title= title
     meta(name='viewport', content='width=device-width, initial-scale=1.0')
     meta(name="apple-mobile-web-app-capable", content="yes")
     meta(http-equiv="Content-Type", content="text/html; charset=utf-8")
-    link(rel='stylesheet', href='/stylesheets/reset.css');
+    meta(name='description', contents='Glark.io is a hacky minimalistic collaborative code editor for pair programing.')
+    meta(name='keywords', contents='glark.io web based code editor collaborative editing minimalistic')
+    link(rel='stylesheet', href='/stylesheets/reset.css')
     link(rel='stylesheet', href='/stylesheets/style.css')
+    link(rel='stylesheet', href='//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css')
   body
     block content
     
-    script(src='//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js');
+    script(src='//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js')
     script(src='/socket.io/socket.io.js')
     script(src='/javascripts/lib/ace/ace.js')
     script(src='/javascripts/lib/share/bcsocket.js')
-    script(src='/javascripts/lib/share/webclient/share.uncompressed.js')
+    script(src='/javascripts/lib/share/webclient/share.js')
     script(src='/javascripts/lib/share/webclient/ace.js')
     script(src='/javascripts/defaults/' + defaultFile)
     script(src='/javascripts/microGlark.js')
+    script(src='/javascripts/lib/filesaver/FileSaver.js' async)
+    script(type="font/woff" src="http://use.edgefonts.net/source-code-pro.js" async)

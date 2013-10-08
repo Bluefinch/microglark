@@ -14,13 +14,28 @@ app.set('port', process.env.PORT || 3000);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.use(express.favicon());
-app.use(express.logger('dev'));
-app.use(express.bodyParser());
+
+if ('development' === app.get('env')) {
+    app.use(express.logger('dev'));
+} else {
+    app.use(express.logger());
+}
+
+app.use(express.compress());
 app.use(express.methodOverride());
-app.use(express.cookieParser('aerg68nu8itk6'));
-app.use(express.session());
+app.use(express.bodyParser());
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
+
+/* 404 like middleware. Route everything that was not answered yet to the main
+ * page, except the 'channel' url used by sharejs. */
+app.use(function (req, res, next) {
+    if (req.path.length > 7 && req.path.substr(1, 7) === 'channel') {
+        next();
+    } else {
+        res.redirect('/');
+    }
+});
 
 // development only
 if ('development' === app.get('env')) {
@@ -33,8 +48,10 @@ app.get('/about', routes.about);
 var server = http.createServer(app);
 
 var sio = socketio.listen(server);
-sio.set('log level', 0);
+sio.enable('browser client etag');
+sio.set('log level', 1);
 sio.set('transports', ['xhr-polling']);
+// sio.set('close timeout', 5);
 
 /* Attach the sharjs REST and Socket.io interfaces to the server. */
 var sharejsOptions = {
@@ -42,6 +59,7 @@ var sharejsOptions = {
         type: 'none'
     }
 };
+
 sharejs.server.attach(app, sharejsOptions);
 
 server.listen(app.get('port'), function () {
@@ -51,9 +69,11 @@ server.listen(app.get('port'), function () {
 sio.sockets.on('connection', function (socket) {
     console.log('Websocket connection.');
 
-    socket.on('join', function (documentId) {
-        socket.set('documentId', documentId, function () {
-            socket.join(documentId);
+    socket.on('join', function (data) {
+        socket.set('documentId', data.documentId, function () {
+            socket.set('userId', data.userId, function () {
+                socket.join(data.documentId);
+            });
         });
     });
 
@@ -77,4 +97,25 @@ sio.sockets.on('connection', function (socket) {
             socket.broadcast.to(documentId).emit('notifyFilename', data);
         });
     });
+
+    socket.on('disconnect', function () {
+        socket.get('documentId', function (err, documentId) {
+            if (err) return console.log(err);
+            var room = sio.sockets.manager.rooms['/' + documentId];
+            if (!room || (room.length === 1 && room[0] === socket.id)) {
+                /* Zombie document, prune it. */
+                console.log('Deleting document ' + documentId);
+                app.model.delete(documentId, function (err) {
+                    if (err) return console.log(err);
+                    console.log('document deleted.');
+                });
+            } else {
+                socket.get('userId', function (err, userId) {
+                    if (err) return console.log(err);
+                    socket.broadcast.to(documentId).emit('collaboratorDisconnect', userId);
+                });
+            }
+        });
+    });
 });
+

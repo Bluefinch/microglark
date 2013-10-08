@@ -1,5 +1,5 @@
 /* global io, ace, sharejs, $, editor, socket, userId, documentId, escape, 
-FileReader, sharedDocument, currentFilename, defaultFile */
+FileReader, sharedDocument, currentFilename, defaultFile, Blob, saveAs */
 'use strict';
 
 window.editor = null;
@@ -179,6 +179,11 @@ var handleDragOver = function (evt) {
     evt.dataTransfer.dropEffect = 'copy';
 };
 
+var downloadDocument = function () {
+    var blob = new Blob([editor.getValue()], {type: 'text/plain;charset=utf-8'});
+    saveAs(blob, currentFilename);
+};
+
 $(function () {
     window.userId = makeRandomHash(5);
 
@@ -197,7 +202,7 @@ $(function () {
     editor.setShowPrintMargin(false);
     editor.getSession().setUseWrapMode(true);
     editor.getSession().setUseSoftTabs(true);
-    editor.getSession().setTabSize(2);
+    editor.getSession().setTabSize(4);
     editor.setTheme("ace/theme/glarkio_black");
 
     /* Initialize sharejs. */
@@ -223,7 +228,7 @@ $(function () {
 
     /* Socket.io events. */
     socket.on('connect', function () {
-        socket.emit('join', documentId);
+        socket.emit('join', {documentId: documentId, userId: userId});
     });
 
     socket.on('selectionChange', function (data) {
@@ -250,7 +255,7 @@ $(function () {
                     top: screenCoordinates.pageY
                 });
 
-                showTooltipForMarkup($selection, 2000);
+                showTooltipForMarkup($selection, 500);
             }
         }
     });
@@ -262,6 +267,14 @@ $(function () {
     socket.on('requestFilename', function () {
         if (currentFilename) {
             socket.emit('notifyFilename', currentFilename);
+        }
+    });
+
+    socket.on('collaboratorDisconnect', function (userId) {
+        /* Remove the collaborator selection. */
+        var $selection = $('#collaboration-selection-' + userId);
+        if ($selection.length !== 0) {
+            $selection.remove();
         }
     });
 
@@ -279,6 +292,10 @@ $(function () {
             var markup = $(this).parent();
             showTooltipForMarkup(markup, 500);
         });
+
+    $('#download').click(function () {
+        downloadDocument();
+    });
 
     /* Make the body a drop zone. */
     var body = document.body;
