@@ -5,5 +5,5 @@ window.defaultFile = {
         " with anybody, and start collaborating editing.\n" +
         " * Drag and drop any file from your desktop here to open it.\n" +
         " * Enjoy! */\n" +
-        " exports.glark = function () {\n    console.log('hi!');\n};"
+        "exports.glark = function () {\n    console.log('hi!');\n};"
 };

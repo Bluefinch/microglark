@@ -37,7 +37,6 @@
     border-top: 2px solid #33555E;
 }
 
-
 #container {
     width: 100%;
     margin-left: -50%;
@@ -136,13 +135,13 @@ a {
 
 #footer a {
     float: left;
-    margin-top: 9px;
-    margin-left: 9px;
-    color: rgb(104, 104, 104);
+    margin-top: 10px;
+    margin-left: 10px;
+    color: #686868;
 }
 
 #footer a:hover {
-    color: rgb(179, 179, 179);
+    color: #B3B3B3;
 }
 
 #footer .star {
