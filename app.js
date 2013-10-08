@@ -48,10 +48,14 @@ app.get('/about', routes.about);
 var server = http.createServer(app);
 
 var sio = socketio.listen(server);
+sio.enable('browser client minification');
 sio.enable('browser client etag');
 sio.set('log level', 1);
-sio.set('transports', ['xhr-polling']);
-// sio.set('close timeout', 5);
+sio.set('transports', ['websocket', 'xhr-polling']);
+if ('development' === app.get('env')) {
+    sio.set('transports', ['xhr-polling']);
+}
+sio.set('close timeout', 5);
 
 /* Attach the sharjs REST and Socket.io interfaces to the server. */
 var sharejsOptions = {
@@ -59,6 +63,10 @@ var sharejsOptions = {
         type: 'none'
     }
 };
+
+if ('production' === app.get('env')) {
+    sharejsOptions.websocket = true;
+}
 
 sharejs.server.attach(app, sharejsOptions);
 
@@ -102,6 +110,7 @@ sio.sockets.on('connection', function (socket) {
         socket.get('documentId', function (err, documentId) {
             if (err) return console.log(err);
             var room = sio.sockets.manager.rooms['/' + documentId];
+            console.log(room);
             if (!room || (room.length === 1 && room[0] === socket.id)) {
                 /* Zombie document, prune it. */
                 console.log('Deleting document ' + documentId);
