@@ -293,7 +293,8 @@ $(function () {
             showTooltipForMarkup(markup, 500);
         });
 
-    $('#download').click(function () {
+    $('#download').click(function (event) {
+        event.preventDefault();
         downloadDocument();
     });
 
