@@ -1,8 +1,6 @@
 window.defaultFile = {
     filename: 'About.md',
-    content: "# About\n"+
-        "\n"+
-        "µGlark.io\n"+
+    content: "# About - µGlark.io\n"+
         "\n"+
         "## Authors\n" +
         "@Flolagale & @Verdier\n"+
