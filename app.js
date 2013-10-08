@@ -55,7 +55,7 @@ sio.set('transports', ['websocket', 'xhr-polling']);
 if ('development' === app.get('env')) {
     sio.set('transports', ['xhr-polling']);
 }
-sio.set('close timeout', 5);
+// sio.set('close timeout', 5);
 
 /* Attach the sharjs REST and Socket.io interfaces to the server. */
 var sharejsOptions = {
