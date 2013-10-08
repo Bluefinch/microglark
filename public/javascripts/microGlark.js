@@ -130,6 +130,7 @@ var getAceMode = function (filename) {
 var setFilename = function (filename) {
     if (filename !== currentFilename) {
         /* Update document. */
+        filename = escape(filename);
         $('#filename').html(filename);
         document.title = 'µGlark.io - ' + filename;
 
@@ -161,13 +162,12 @@ var handleFileSelect = function (evt) {
 
         editor.setReadOnly(true);
         sharedDocument.detach_ace();
-        sharedDocument.del(0, sharedDocument.getLength(), function () {
-            sharedDocument.insert(0, content, function () {
-                sharedDocument.attach_ace(editor);
-                editor.session.setScrollTop(0);
-                editor.setReadOnly(false);
-            });
-        });
+        editor.setValue(content);
+
+        /* Attach the editor back, while keeping its new content. */
+        sharedDocument.attach_ace(editor, true);
+        editor.session.setScrollTop(0);
+        editor.setReadOnly(false);
     };
     reader.readAsText(file);
 };
@@ -180,7 +180,9 @@ var handleDragOver = function (evt) {
 };
 
 var downloadDocument = function () {
-    var blob = new Blob([editor.getValue()], {type: 'text/plain;charset=utf-8'});
+    var blob = new Blob([editor.getValue()], {
+        type: 'text/plain;charset=utf-8'
+    });
     saveAs(blob, currentFilename);
 };
 
@@ -218,6 +220,7 @@ $(function () {
             socket.emit('requestFilename');
         }
         doc.attach_ace(editor);
+        editor.session.setScrollTop(0);
         editor.setReadOnly(false);
 
         window.sharedDocument = doc;
@@ -228,7 +231,10 @@ $(function () {
 
     /* Socket.io events. */
     socket.on('connect', function () {
-        socket.emit('join', {documentId: documentId, userId: userId});
+        socket.emit('join', {
+            documentId: documentId,
+            userId: userId
+        });
     });
 
     socket.on('selectionChange', function (data) {
@@ -296,6 +302,16 @@ $(function () {
     $('#download').click(function (event) {
         event.preventDefault();
         downloadDocument();
+    });
+
+    $('#filename').focus(function () {
+        $(this).addClass('editing');
+    });
+
+    $('#filename').blur(function () {
+        var filename = $(this).html();
+        setFilename(filename);
+        $(this).removeClass('editing');
     });
 
     /* Make the body a drop zone. */
