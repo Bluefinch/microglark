@@ -109,9 +109,15 @@ a {
 #filename {
     display: inline-block;
     height: 35px;
+    min-width: 3px;
     padding: 10px 12px;
     color: white;
     font-weight: bold;
+}
+
+#filename .text:focus {
+    display: block;
+    outline: none;
 }
 
 .collaboration-selection-wrapper {

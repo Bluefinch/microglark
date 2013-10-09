@@ -131,7 +131,7 @@ var setFilename = function (filename) {
     if (filename !== currentFilename) {
         /* Update document. */
         filename = escape(filename);
-        $('#filename').html(filename);
+        $('#filename .text').html(filename);
         document.title = 'µGlark.io - ' + filename;
 
         /* Update ace mode. */
@@ -304,14 +304,18 @@ $(function () {
         downloadDocument();
     });
 
-    $('#filename').focus(function () {
-        $(this).addClass('editing');
-    });
-
-    $('#filename').blur(function () {
+    $('#filename .text').blur(function () {
         var filename = $(this).html();
         setFilename(filename);
-        $(this).removeClass('editing');
+    });
+    
+    $('#filename .text').keypress(function(event) {
+        if(event.which == 13) {
+            event.preventDefault();
+            var filename = $(this).html();
+            setFilename(filename);
+            editor.focus();
+        }
     });
 
     /* Make the body a drop zone. */
