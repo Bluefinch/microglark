@@ -307,6 +307,7 @@ $(function () {
     $('#filename .text').blur(function () {
         var filename = $(this).html();
         setFilename(filename);
+        socket.emit('notifyFilename', filename);
     });
     
     $('#filename .text').keypress(function(event) {
@@ -314,6 +315,7 @@ $(function () {
             event.preventDefault();
             var filename = $(this).html();
             setFilename(filename);
+            socket.emit('notifyFilename', filename);
             editor.focus();
         }
     });
