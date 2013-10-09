@@ -1,10 +1,12 @@
 window.defaultFile = {
     filename: 'About.md',
-    content: "# About - µGlark.io\n"+
-        "\n"+
+    getContent: function () {
+        return "# About - µGlark.io\n" +
+        "\n" +
         "## Authors\n" +
-        "@Flolagale & @Verdier\n"+
-        "\n"+
-        "## Repo\n"+
-        "http://github.com/Bluefinch/microglark/"
+        "@Flolagale & @Verdier\n" +
+        "\n" +
+        "## Repo\n" +
+        "[microglark](http://github.com/Bluefinch/microglark)";
+    }
 };

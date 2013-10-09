@@ -214,7 +214,7 @@ $(function () {
             return;
         }
         if (doc.created) {
-            doc.insert(0, defaultFile.content);
+            doc.insert(0, defaultFile.getContent());
             setFilename(defaultFile.filename);
         } else {
             socket.emit('requestFilename');
