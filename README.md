@@ -10,4 +10,4 @@ When everyone has closed their browser µGlark tab, the room is destroyed on the
 This means there is no persistence of your data on the server, because we love privacy.
 
 Currently, [µGlark.io](http://micro.glark.io) is hosted on a micro ec2 instance, so if it lags,
-please tell us so that we scale this a bit.
+please open an issue so that we scale this a bit.
