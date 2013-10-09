@@ -46,7 +46,9 @@ app.get('/', routes.index);
 app.get('/about', routes.about);
 
 /* For tweet button. */
-app.head('/', function (req, res) { res.send(200); });
+app.head('/', function (req, res) {
+    res.send(200);
+});
 
 var server = http.createServer(app);
 

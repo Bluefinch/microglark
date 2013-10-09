@@ -7,7 +7,8 @@ window.currentFilename = null;
 window.documentId = null;
 window.sharedDocument = null;
 
-var filetype = function () {
+var modeHelper = function () {
+
     var aceModes = {
         coffee: ["CoffeeScript", "coffee"],
         coldfusion: ["ColdFusion", "cfm"],
@@ -56,8 +57,9 @@ var filetype = function () {
             ext2mode[extension] = key;
         });
     });
+
     return {
-        getAceModeFromExtension: function (extension) {
+        getAceModeForExtension: function (extension) {
             if (ext2mode[extension] !== undefined) {
                 return 'ace/mode/' + ext2mode[extension];
             }
@@ -65,6 +67,40 @@ var filetype = function () {
         }
     };
 }();
+
+var selectionHelper = {
+
+    getSelectionMarkupForUser: function (userId) {
+        return '<div id="collaboration-selection-' + userId + '" class="collaboration-selection-wrapper">' +
+            '<div class="collaboration-selection"></div>' +
+            '<div class="collaboration-selection-tooltip">' + userId + '</div>' +
+            '</div>';
+    },
+
+    hideMarkupTooltip: function ($markup) {
+        $markup.children('.collaboration-selection-tooltip').fadeOut('fast');
+        $markup.removeAttr('hideTooltipTimeoutRef');
+    },
+
+    /* Show the tooltip of the given selection markup. If duration is defined, the
+     * tooltip is automaticaly hidden when the time is elapsed. */
+    showMarkupTooltip: function ($markup, duration) {
+        var timeoutRef = $markup.attr('hideTooltipTimeoutRef');
+        if (timeoutRef !== undefined) {
+            clearTimeout(timeoutRef);
+            $markup.removeAttr('hideTooltipTimeoutRef');
+        }
+
+        $markup.children('.collaboration-selection-tooltip').fadeIn('fast');
+
+        if (duration !== undefined) {
+            timeoutRef = setTimeout(function () {
+                selectionHelper.hideMarkupTooltip($markup);
+            }, duration);
+            $markup.attr('hideTooltipTimeoutRef', timeoutRef);
+        }
+    }
+};
 
 var makeRandomHash = function (length) {
     var chars, x;
@@ -88,43 +124,12 @@ var onSelectionChange = function () {
     });
 };
 
-var getSelectionMarkupForUser = function (userId) {
-    return '<div id="collaboration-selection-' + userId + '" class="collaboration-selection-wrapper">' +
-        '<div class="collaboration-selection"></div>' +
-        '<div class="collaboration-selection-tooltip">' + userId + '</div>' +
-        '</div>';
-};
-
-/* This function must be bound with the markup which contains
- * the tooltip to hide. */
-var _hideTooltipAndRemoveAttrForBoundMarkup = function () {
-    this.children('.collaboration-selection-tooltip').fadeOut('fast');
-    this.removeAttr('hideTooltipTimeoutRef');
-};
-
-/* Show the tooltip of the given selection markup. If duration is defined, the
- * tooltip is automaticaly hidden when the time is elapsed. */
-var showTooltipForMarkup = function (markup, duration) {
-    var timeoutRef = markup.attr('hideTooltipTimeoutRef');
-    if (timeoutRef !== undefined) {
-        clearTimeout(timeoutRef);
-        markup.removeAttr('hideTooltipTimeoutRef');
-    }
-
-    markup.children('.collaboration-selection-tooltip').fadeIn('fast');
-
-    if (duration !== undefined) {
-        timeoutRef = setTimeout(_hideTooltipAndRemoveAttrForBoundMarkup.bind(markup), duration);
-        markup.attr('hideTooltipTimeoutRef', timeoutRef);
-    }
-};
-
 var getAceMode = function (filename) {
     var fileExtension = 'unknown';
     if (filename.indexOf('.') !== -1) {
         fileExtension = filename.split('.').pop();
     }
-    return filetype.getAceModeFromExtension(fileExtension);
+    return modeHelper.getAceModeForExtension(fileExtension);
 };
 
 var setFilename = function (filename) {
@@ -248,7 +253,7 @@ $(function () {
             if ($selection.length === 0) {
                 /* The markup for the selection of this user does not
                  * exist yet. Append it to the dom. */
-                $selection = $(getSelectionMarkupForUser(data.userId));
+                $selection = $(selectionHelper.getSelectionMarkupForUser(data.userId));
                 $('body').append($selection);
             }
 
@@ -261,7 +266,7 @@ $(function () {
                     top: screenCoordinates.pageY
                 });
 
-                showTooltipForMarkup($selection, 500);
+                selectionHelper.showMarkupTooltip($selection, 500);
             }
         }
     });
@@ -289,14 +294,14 @@ $(function () {
         '.collaboration-selection,.collaboration-selection-tooltip',
         function () {
             var markup = $(this).parent();
-            showTooltipForMarkup(markup);
+            selectionHelper.showMarkupTooltip(markup);
         });
 
     $(document).on('mouseleave',
         '.collaboration-selection,.collaboration-selection-tooltip',
         function () {
             var markup = $(this).parent();
-            showTooltipForMarkup(markup, 500);
+            selectionHelper.showMarkupTooltip(markup, 500);
         });
 
     $('#download').click(function (event) {
@@ -309,9 +314,9 @@ $(function () {
         setFilename(filename);
         socket.emit('notifyFilename', filename);
     });
-    
-    $('#filename .text').keypress(function(event) {
-        if(event.which == 13) {
+
+    $('#filename .text').keypress(function (event) {
+        if (event.which === 13) {
             event.preventDefault();
             var filename = $(this).html();
             setFilename(filename);
