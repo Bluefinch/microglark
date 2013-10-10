@@ -9,7 +9,6 @@ var socketio = require('socket.io');
 
 var app = express();
 
-// all environments
 app.set('port', process.env.PORT || 3000);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -37,11 +36,16 @@ app.use(function (req, res, next) {
     }
 });
 
-// development only
 if ('development' === app.get('env')) {
     app.use(express.errorHandler());
 }
 
+/* Provide some variables to the views. */
+if ('production' === app.get('env')) {
+    app.set('production', true);
+}
+
+/* Routing. */
 app.get('/', routes.index);
 app.get('/about', routes.about);
 
