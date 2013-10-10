@@ -123,6 +123,7 @@ a {
 .collaboration-selection-wrapper {
     position: fixed;
     z-index: 1;
+    cursor: pointer;
 }
 
 .collaboration-selection {

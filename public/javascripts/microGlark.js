@@ -1,9 +1,10 @@
-/* global io, ace, sharejs, $, editor, socket, userId, userColor, documentId, escape, 
+/* global io, ace, sharejs, $, editor, socket, userId, userColor, markups, documentId, escape, 
 FileReader, sharedDocument, currentFilename, defaultFile, Blob, saveAs */
 'use strict';
 
 window.userId = null;
 window.userColor = null;
+window.markups = {};
 window.editor = null;
 window.currentFilename = null;
 window.documentId = null;
@@ -70,39 +71,87 @@ var modeHelper = function () {
     };
 }();
 
-var selectionHelper = {
+var makeMarkupForUser = function () {
 
-    getSelectionMarkupForUser: function (userId) {
-        return '<div id="collaboration-selection-' + userId + '" class="collaboration-selection-wrapper">' +
+    var Markup = function (editor, userId) {
+        this._editor = editor;
+        this._userId = userId;
+
+        this.$markup = $('<div id="collaboration-selection-' + userId + '" class="collaboration-selection-wrapper">' +
             '<div class="collaboration-selection"></div>' +
             '<div class="collaboration-selection-tooltip">' + userId + '</div>' +
-            '</div>';
-    },
+            '</div>');
+        this._location = {
+            row: -1,
+            column: -1
+        };
+        this._timeout = null;
 
-    hideMarkupTooltip: function ($markup) {
-        $markup.children('.collaboration-selection-tooltip').fadeOut('fast');
-        $markup.removeAttr('hideTooltipTimeoutRef');
-    },
+        var _this = this;
+        this.$markup.on('mouseenter', function () {
+            _this.showTooltip();
+        });
+        this.$markup.on('mouseleave', function () {
+            _this.showTooltip(500);
+        });
+    };
 
-    /* Show the tooltip of the given selection markup. If duration is defined, the
+    Markup.prototype.remove = function () {
+        this.$markup.remove();
+    };
+
+    Markup.prototype.setColor = function (color) {
+        this.$markup.children('.collaboration-selection').css('background-color', color);
+        this.$markup.children('.collaboration-selection-tooltip').css('background-color', color);
+    };
+
+    Markup.prototype.setLocation = function (location) {
+        this._location = location;
+        this.updateLocation();
+    };
+
+    Markup.prototype.getLocation = function () {
+        return this._location;
+    };
+
+    Markup.prototype.updateLocation = function () {
+        var screenCoordinates = this._editor.renderer
+            .textToScreenCoordinates(this._location.row,
+                this._location.column);
+
+        this.$markup.css({
+            left: screenCoordinates.pageX,
+            top: screenCoordinates.pageY
+        });
+    };
+
+    Markup.prototype.hideTooltip = function () {
+        this.$markup.children('.collaboration-selection-tooltip').fadeOut('fast');
+        this._timeout = null;
+    };
+
+    /* Show the markup tooltip. If duration is defined, the
      * tooltip is automaticaly hidden when the time is elapsed. */
-    showMarkupTooltip: function ($markup, duration) {
-        var timeoutRef = $markup.attr('hideTooltipTimeoutRef');
-        if (timeoutRef !== undefined) {
-            clearTimeout(timeoutRef);
-            $markup.removeAttr('hideTooltipTimeoutRef');
+    Markup.prototype.showTooltip = function (duration) {
+        if (this._timeout !== null) {
+            clearTimeout(this._timeout);
+            this._timeout = null;
         }
 
-        $markup.children('.collaboration-selection-tooltip').fadeIn('fast');
+        this.$markup.children('.collaboration-selection-tooltip').fadeIn('fast');
 
         if (duration !== undefined) {
-            timeoutRef = setTimeout(function () {
-                selectionHelper.hideMarkupTooltip($markup);
+            var _this = this;
+            this._timeout = setTimeout(function () {
+                _this.hideTooltip();
             }, duration);
-            $markup.attr('hideTooltipTimeoutRef', timeoutRef);
         }
-    }
-};
+    };
+
+    return function (editor, userId) {
+        return new Markup(editor, userId);
+    };
+}();
 
 var makeRandomHash = function (length) {
     var chars, x;
@@ -118,10 +167,10 @@ var makeRandomHash = function (length) {
 };
 
 var peekRandomColor = function () {
-   var colors = [
-       '#ff7567',
-       '#5bdd92',
-       '#61b8f3'
+    var colors = [
+        '#ff7567',
+        '#5bdd92',
+        '#61b8f3'
     ];
     return function () {
         return colors[Math.floor(Math.random() * colors.length)];
@@ -246,7 +295,7 @@ $(function () {
 
         editor.getSelection().on('changeCursor', notifySelection);
         editor.getSelection().on('changeSelection', notifySelection);
-        
+
         socket.emit('requestSelection');
     });
 
@@ -260,31 +309,27 @@ $(function () {
 
     socket.on('notifySelection', function (data) {
 
-        var screenCoordinates = editor.renderer
-            .textToScreenCoordinates(data.selection.start.row,
-                data.selection.start.column);
-
         /* Update the selection css to the correct position. */
-        var $selection = $('#collaboration-selection-' + data.userId);
-        if ($selection.length === 0) {
+        var markup = markups[data.userId];
+        if (markup === undefined) {
             /* The markup for the selection of this user does not
              * exist yet. Append it to the dom. */
-            $selection = $(selectionHelper.getSelectionMarkupForUser(data.userId));
-            $selection.find('.collaboration-selection').css('background-color', data.userColor);
-            $selection.find('.collaboration-selection-tooltip').css('background-color', data.userColor);
-            $('body').append($selection);
+            markup = makeMarkupForUser(editor, data.userId);
+            markup.setColor(data.userColor);
+            $('body').append(markup.$markup);
+            markups[data.userId] = markup;
         }
 
         /* Check if the selection has changed. */
-        if ($selection.css('left').slice(0, -2) !== String(screenCoordinates.pageX) ||
-            $selection.css('top').slice(0, -2) !== String(screenCoordinates.pageY)) {
+        var location = markup.getLocation();
+        if (location.row !== data.selection.start.row ||
+            location.column !== data.selection.start.column) {
 
-            $selection.css({
-                left: screenCoordinates.pageX,
-                top: screenCoordinates.pageY
+            markup.setLocation({
+                row: data.selection.start.row,
+                column: data.selection.start.column
             });
-
-            selectionHelper.showMarkupTooltip($selection, 500);
+            markup.showTooltip(500);
         }
 
     });
@@ -298,33 +343,27 @@ $(function () {
             socket.emit('notifyFilename', currentFilename);
         }
     });
-    
+
     socket.on('requestSelection', function () {
         notifySelection();
     });
 
     socket.on('collaboratorDisconnect', function (userId) {
         /* Remove the collaborator selection. */
-        var $selection = $('#collaboration-selection-' + userId);
-        if ($selection.length !== 0) {
-            $selection.remove();
+        var markup = markups[userId];
+        if (markup !== undefined) {
+            markup.remove();
+            markups[userId] = undefined;
         }
     });
 
     /* Bind some ui events. */
-    $(document).on('mouseenter',
-        '.collaboration-selection,.collaboration-selection-tooltip',
-        function () {
-            var markup = $(this).parent();
-            selectionHelper.showMarkupTooltip(markup);
+    $(window).resize(function () {
+        Object.keys(markups).forEach(function (userId) {
+            var markup = markups[userId];
+            markup.updateLocation();
         });
-
-    $(document).on('mouseleave',
-        '.collaboration-selection,.collaboration-selection-tooltip',
-        function () {
-            var markup = $(this).parent();
-            selectionHelper.showMarkupTooltip(markup, 500);
-        });
+    });
 
     $('#download').click(function (event) {
         event.preventDefault();

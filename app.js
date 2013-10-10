@@ -100,7 +100,7 @@ sio.sockets.on('connection', function (socket) {
             socket.broadcast.to(documentId).emit('notifySelection', data);
         });
     });
-    
+
     socket.on('requestSelection', function (data) {
         socket.get('documentId', function (err, documentId) {
             if (err) return console.log(err);
