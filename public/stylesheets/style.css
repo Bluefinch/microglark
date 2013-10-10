@@ -159,3 +159,10 @@ a {
     float: right;
     margin-top: 8px;
 }
+
+/* Extend Act theme */
+
+.ace_content .ace_heading {
+    color: #ff7567;
+}
+

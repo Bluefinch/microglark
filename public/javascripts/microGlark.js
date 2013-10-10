@@ -1,7 +1,9 @@
-/* global io, ace, sharejs, $, editor, socket, userId, documentId, escape, 
+/* global io, ace, sharejs, $, editor, socket, userId, userColor, documentId, escape, 
 FileReader, sharedDocument, currentFilename, defaultFile, Blob, saveAs */
 'use strict';
 
+window.userId = null;
+window.userColor = null;
 window.editor = null;
 window.currentFilename = null;
 window.documentId = null;
@@ -115,11 +117,22 @@ var makeRandomHash = function (length) {
     return name.join('');
 };
 
-var onSelectionChange = function () {
+var peekRandomColor = function () {
+   var colors = [
+       '#ff7567',
+       '#5bdd92',
+       '#61b8f3'
+    ];
+    return function () {
+        return colors[Math.floor(Math.random() * colors.length)];
+    };
+}();
+
+var notifySelection = function () {
     var selection = editor.getSelection().getRange();
-    socket.emit('selectionChange', {
+    socket.emit('notifySelection', {
         userId: userId,
-        documentId: documentId,
+        userColor: userColor,
         selection: selection
     });
 };
@@ -193,6 +206,7 @@ var downloadDocument = function () {
 
 $(function () {
     window.userId = makeRandomHash(5);
+    window.userColor = peekRandomColor();
 
     /* Get or make docummentId. */
     if (!document.location.hash) {
@@ -230,8 +244,10 @@ $(function () {
 
         window.sharedDocument = doc;
 
-        editor.getSelection().on('changeCursor', onSelectionChange);
-        editor.getSelection().on('changeSelection', onSelectionChange);
+        editor.getSelection().on('changeCursor', notifySelection);
+        editor.getSelection().on('changeSelection', notifySelection);
+        
+        socket.emit('requestSelection');
     });
 
     /* Socket.io events. */
@@ -242,33 +258,35 @@ $(function () {
         });
     });
 
-    socket.on('selectionChange', function (data) {
-        if (data.documentId === documentId) {
-            var screenCoordinates = editor.renderer
-                .textToScreenCoordinates(data.selection.start.row,
-                    data.selection.start.column);
+    socket.on('notifySelection', function (data) {
 
-            /* Update the selection css to the correct position. */
-            var $selection = $('#collaboration-selection-' + data.userId);
-            if ($selection.length === 0) {
-                /* The markup for the selection of this user does not
-                 * exist yet. Append it to the dom. */
-                $selection = $(selectionHelper.getSelectionMarkupForUser(data.userId));
-                $('body').append($selection);
-            }
+        var screenCoordinates = editor.renderer
+            .textToScreenCoordinates(data.selection.start.row,
+                data.selection.start.column);
 
-            /* Check if the selection has changed. */
-            if ($selection.css('left').slice(0, -2) !== String(screenCoordinates.pageX) ||
-                $selection.css('top').slice(0, -2) !== String(screenCoordinates.pageY)) {
-
-                $selection.css({
-                    left: screenCoordinates.pageX,
-                    top: screenCoordinates.pageY
-                });
-
-                selectionHelper.showMarkupTooltip($selection, 500);
-            }
+        /* Update the selection css to the correct position. */
+        var $selection = $('#collaboration-selection-' + data.userId);
+        if ($selection.length === 0) {
+            /* The markup for the selection of this user does not
+             * exist yet. Append it to the dom. */
+            $selection = $(selectionHelper.getSelectionMarkupForUser(data.userId));
+            $selection.find('.collaboration-selection').css('background-color', data.userColor);
+            $selection.find('.collaboration-selection-tooltip').css('background-color', data.userColor);
+            $('body').append($selection);
         }
+
+        /* Check if the selection has changed. */
+        if ($selection.css('left').slice(0, -2) !== String(screenCoordinates.pageX) ||
+            $selection.css('top').slice(0, -2) !== String(screenCoordinates.pageY)) {
+
+            $selection.css({
+                left: screenCoordinates.pageX,
+                top: screenCoordinates.pageY
+            });
+
+            selectionHelper.showMarkupTooltip($selection, 500);
+        }
+
     });
 
     socket.on('notifyFilename', function (filename) {
@@ -279,6 +297,10 @@ $(function () {
         if (currentFilename) {
             socket.emit('notifyFilename', currentFilename);
         }
+    });
+    
+    socket.on('requestSelection', function () {
+        notifySelection();
     });
 
     socket.on('collaboratorDisconnect', function (userId) {
