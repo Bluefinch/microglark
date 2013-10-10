@@ -9,6 +9,7 @@ window.editor = null;
 window.currentFilename = null;
 window.documentId = null;
 window.sharedDocument = null;
+window.beautify = null;
 
 var modeHelper = function () {
 
@@ -186,12 +187,44 @@ var notifySelection = function () {
     });
 };
 
+var requestSelection = function () {
+    socket.emit('requestSelection');
+};
+
 var getAceMode = function (filename) {
     var fileExtension = 'unknown';
     if (filename.indexOf('.') !== -1) {
         fileExtension = filename.split('.').pop();
     }
     return modeHelper.getAceModeForExtension(fileExtension);
+};
+
+window.json_beautify = function (str) {
+    try {
+        return JSON.stringify(JSON.parse(str), null, 4);
+    } catch (e) {
+        console.log(e);
+        return str;
+    }
+};
+
+var showBeautifyButton = function () {
+    $('#beautify').show();
+};
+
+var hideBeautifyButton = function () {
+    $('#beautify').hide();
+};
+
+var beautifyDocument = function () {
+    editor.setReadOnly(true);
+    var content = editor.getValue();
+    content = window.beautify(content);
+    editor.setValue(content);
+    editor.session.setScrollTop(0);
+    editor.setReadOnly(false);
+    notifySelection();
+    requestSelection();
 };
 
 var setFilename = function (filename) {
@@ -207,6 +240,37 @@ var setFilename = function (filename) {
 
         /* Save filename.*/
         window.currentFilename = filename;
+
+        /* Set the beautify function if necessary. */
+        var fileExtension = null;
+        if (filename.indexOf('.') !== -1) {
+            fileExtension = filename.split('.').pop();
+        }
+
+        switch (fileExtension) {
+        case 'js':
+            window.beautify = window.js_beautify;
+            showBeautifyButton();
+            break;
+        case 'css':
+            window.beautify = window.css_beautify;
+            showBeautifyButton();
+            break;
+        case 'html':
+        case 'htm':
+        case 'xml':
+        case 'XML':
+            window.beautify = window.html_beautify;
+            showBeautifyButton();
+            break;
+        case 'json':
+            window.beautify = window.json_beautify;
+            showBeautifyButton();
+            break;
+        default:
+            window.beautify = null;
+            hideBeautifyButton();
+        }
     }
 };
 
@@ -296,7 +360,7 @@ $(function () {
         editor.getSelection().on('changeCursor', notifySelection);
         editor.getSelection().on('changeSelection', notifySelection);
 
-        socket.emit('requestSelection');
+        requestSelection();
     });
 
     /* Socket.io events. */
@@ -368,6 +432,11 @@ $(function () {
     $('#download').click(function (event) {
         event.preventDefault();
         downloadDocument();
+    });
+
+    $('#beautify').click(function (event) {
+        event.preventDefault();
+        beautifyDocument();
     });
 
     $('#filename .text').blur(function () {
