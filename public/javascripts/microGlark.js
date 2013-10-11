@@ -249,7 +249,12 @@ var setFilename = function (filename) {
 
         switch (fileExtension) {
         case 'js':
-            window.beautify = window.js_beautify;
+            window.beautify = function (str) {
+                /* Use js_beautify with the correct options. */
+                return window.js_beautify(str, {
+                    space_after_anon_function: true
+                });
+            };
             showBeautifyButton();
             break;
         case 'css':
