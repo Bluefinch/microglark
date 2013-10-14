@@ -1,7 +1,7 @@
 microglark
 ==========
 
-_A hacky minimalistic remote pair programing editor [µGlark.io](http://micro.glark.io)_
+_A hacky minimalistic remote pair programming editor [µGlark.io](http://micro.glark.io)_
 
 Once on the µGlark landing page, share the url with a fellow developer and start collaborating.
 When done, download the modified file to you desktop.
