@@ -93,6 +93,20 @@ sio.sockets.on('connection', function (socket) {
             });
         });
     });
+    
+    socket.on('requestUser', function () {
+        socket.get('documentId', function (err, documentId) {
+            if (err) return console.log(err);
+            socket.broadcast.to(documentId).emit('requestUser');
+        });
+    });
+
+    socket.on('notifyUser', function (data) {
+        socket.get('documentId', function (err, documentId) {
+            if (err) return console.log(err);
+            socket.broadcast.to(documentId).emit('notifyUser', data);
+        });
+    });
 
     socket.on('notifySelection', function (data) {
         socket.get('documentId', function (err, documentId) {

@@ -171,12 +171,25 @@ var peekRandomColor = function () {
     var colors = [
         '#ff7567',
         '#5bdd92',
-        '#61b8f3'
+        '#61b8f3',
+        '#ff9232',
+        '#c782e4'
     ];
     return function () {
         return colors[Math.floor(Math.random() * colors.length)];
     };
 }();
+
+var notifyUser = function () {
+    socket.emit('notifyUser', {
+        userId: userId,
+        userColor: userColor
+    });
+};
+
+var requestUser = function () {
+    socket.emit('requestUser');
+};
 
 var notifySelection = function () {
     var selection = editor.getSelection().getRange();
@@ -367,6 +380,10 @@ $(function () {
 
         requestSelection();
     });
+    
+    /* Notify. */
+    notifyUser();
+    requestUser();
 
     /* Socket.io events. */
     socket.on('connect', function () {
@@ -400,11 +417,20 @@ $(function () {
             });
             markup.showTooltip(500);
         }
-
     });
 
     socket.on('notifyFilename', function (filename) {
         setFilename(filename);
+    });
+    
+    socket.on('notifyUser', function (data) {
+        var id = 'user-' + data.userId;
+        var $user = $('#' + id);
+        if($user.length === 0) {
+            $user = $('<div class="user" id="' + id + '"></div>');
+            $user.appendTo('#users');
+        }
+        $user.css('background-color', data.userColor);
     });
 
     socket.on('requestFilename', function () {
@@ -415,6 +441,10 @@ $(function () {
 
     socket.on('requestSelection', function () {
         notifySelection();
+    });
+    
+    socket.on('requestUser', function () {
+        notifyUser();
     });
 
     socket.on('collaboratorDisconnect', function (userId) {
@@ -432,6 +462,14 @@ $(function () {
             var markup = markups[userId];
             markup.updateLocation();
         });
+    });
+    
+    $('#filename .text').focus(function (event) {
+        $('#filename').addClass('focus');
+    });
+    
+    $('#filename .text').blur(function (event) {
+        $('#filename').removeClass('focus');
     });
 
     $('#download').click(function (event) {
