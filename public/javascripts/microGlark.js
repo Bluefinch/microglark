@@ -1,10 +1,10 @@
-/* global io, ace, sharejs, $, editor, socket, userId, userColor, markups, documentId, escape, 
+/* global io, ace, sharejs, $, editor, socket, userId, userColor, documentId, escape, users,
 FileReader, sharedDocument, currentFilename, defaultFile, Blob, saveAs */
 'use strict';
 
+window.users = {};
 window.userId = null;
 window.userColor = null;
-window.markups = {};
 window.editor = null;
 window.currentFilename = null;
 window.documentId = null;
@@ -72,16 +72,31 @@ var modeHelper = function () {
     };
 }();
 
-var makeMarkupForUser = function () {
+var getOrMakerUser = function (editor, userId) {
+    var user = users[userId];
+    if (user === undefined) {
+        user = makeUser(editor, userId);
+        users[userId] = user;
+    }
+    return user;
+};
 
-    var Markup = function (editor, userId) {
+var makeUser = function () {
+
+    var User = function (editor, userId) {
         this._editor = editor;
         this._userId = userId;
 
-        this.$markup = $('<div id="collaboration-selection-' + userId + '" class="collaboration-selection-wrapper">' +
+        this.$icon = $('<div class="user"></div>');
+        this.$icon.appendTo('#users');
+
+        this.$markup = $('<div class="collaboration-selection-wrapper">' +
             '<div class="collaboration-selection"></div>' +
             '<div class="collaboration-selection-tooltip">' + userId + '</div>' +
             '</div>');
+        this.$markup.appendTo('body');
+        this.$markup.hide();
+
         this._location = {
             row: -1,
             column: -1
@@ -89,6 +104,9 @@ var makeMarkupForUser = function () {
         this._timeout = null;
 
         var _this = this;
+        this.$icon.click(function () {
+            _this.showLine();
+        });
         this.$markup.on('mouseenter', function () {
             _this.showTooltip();
         });
@@ -97,25 +115,32 @@ var makeMarkupForUser = function () {
         });
     };
 
-    Markup.prototype.remove = function () {
+    User.prototype.remove = function () {
         this.$markup.remove();
+        this.$icon.remove();
     };
 
-    Markup.prototype.setColor = function (color) {
+    User.prototype.setColor = function (color) {
         this.$markup.children('.collaboration-selection').css('background-color', color);
         this.$markup.children('.collaboration-selection-tooltip').css('background-color', color);
+        this.$icon.css('background-color', color);
     };
 
-    Markup.prototype.setLocation = function (location) {
+    User.prototype.setLocation = function (location) {
+        if (location.row !== -1 && location.column !== -1) {
+            this.$markup.show();
+        } else {
+            this.$markup.hide();
+        }
         this._location = location;
         this.updateLocation();
     };
 
-    Markup.prototype.getLocation = function () {
+    User.prototype.getLocation = function () {
         return this._location;
     };
 
-    Markup.prototype.updateLocation = function () {
+    User.prototype.updateLocation = function () {
         var screenCoordinates = this._editor.renderer
             .textToScreenCoordinates(this._location.row,
                 this._location.column);
@@ -126,14 +151,14 @@ var makeMarkupForUser = function () {
         });
     };
 
-    Markup.prototype.hideTooltip = function () {
+    User.prototype.hideTooltip = function () {
         this.$markup.children('.collaboration-selection-tooltip').fadeOut('fast');
         this._timeout = null;
     };
 
     /* Show the markup tooltip. If duration is defined, the
      * tooltip is automaticaly hidden when the time is elapsed. */
-    Markup.prototype.showTooltip = function (duration) {
+    User.prototype.showTooltip = function (duration) {
         if (this._timeout !== null) {
             clearTimeout(this._timeout);
             this._timeout = null;
@@ -148,9 +173,15 @@ var makeMarkupForUser = function () {
             }, duration);
         }
     };
+    
+    User.prototype.showLine = function () {
+        if (this._location.row !== -1) {
+            this._editor.gotoLine(this._location.row + 1);
+        }
+    };
 
     return function (editor, userId) {
-        return new Markup(editor, userId);
+        return new User(editor, userId);
     };
 }();
 
@@ -380,10 +411,6 @@ $(function () {
 
         requestSelection();
     });
-    
-    /* Notify. */
-    notifyUser();
-    requestUser();
 
     /* Socket.io events. */
     socket.on('connect', function () {
@@ -391,46 +418,39 @@ $(function () {
             documentId: documentId,
             userId: userId
         });
+        
+        /* Notify. */
+        setTimeout(function () {
+            notifyUser();
+            requestUser();
+        }, 100);
     });
 
     socket.on('notifySelection', function (data) {
 
-        /* Update the selection css to the correct position. */
-        var markup = markups[data.userId];
-        if (markup === undefined) {
-            /* The markup for the selection of this user does not
-             * exist yet. Append it to the dom. */
-            markup = makeMarkupForUser(editor, data.userId);
-            markup.setColor(data.userColor);
-            $('body').append(markup.$markup);
-            markups[data.userId] = markup;
-        }
+        var user = getOrMakerUser(editor, data.userId);
+        user.setColor(data.userColor);
 
         /* Check if the selection has changed. */
-        var location = markup.getLocation();
+        var location = user.getLocation();
         if (location.row !== data.selection.start.row ||
             location.column !== data.selection.start.column) {
 
-            markup.setLocation({
+            user.setLocation({
                 row: data.selection.start.row,
                 column: data.selection.start.column
             });
-            markup.showTooltip(500);
+            user.showTooltip(500);
         }
     });
 
     socket.on('notifyFilename', function (filename) {
         setFilename(filename);
     });
-    
+
     socket.on('notifyUser', function (data) {
-        var id = 'user-' + data.userId;
-        var $user = $('#' + id);
-        if($user.length === 0) {
-            $user = $('<div class="user" id="' + id + '"></div>');
-            $user.appendTo('#users');
-        }
-        $user.css('background-color', data.userColor);
+        var user = getOrMakerUser(editor, data.userId);
+        user.setColor(data.userColor);
     });
 
     socket.on('requestFilename', function () {
@@ -442,33 +462,40 @@ $(function () {
     socket.on('requestSelection', function () {
         notifySelection();
     });
-    
+
     socket.on('requestUser', function () {
         notifyUser();
     });
 
     socket.on('collaboratorDisconnect', function (userId) {
         /* Remove the collaborator selection. */
-        var markup = markups[userId];
-        if (markup !== undefined) {
-            markup.remove();
-            markups[userId] = undefined;
+        var user = users[userId];
+        if (user !== undefined) {
+            user.remove();
+            users[userId] = undefined;
         }
     });
 
     /* Bind some ui events. */
     $(window).resize(function () {
-        Object.keys(markups).forEach(function (userId) {
-            var markup = markups[userId];
-            markup.updateLocation();
+        Object.keys(users).forEach(function (userId) {
+            var user = users[userId];
+            user.updateLocation();
         });
     });
     
-    $('#filename .text').focus(function (event) {
+    editor.session.on("changeScrollTop", function(scrollTop) {
+        Object.keys(users).forEach(function (userId) {
+            var user = users[userId];
+            user.updateLocation();
+        });
+    });
+
+    $('#filename .text').focus(function () {
         $('#filename').addClass('focus');
     });
-    
-    $('#filename .text').blur(function (event) {
+
+    $('#filename .text').blur(function () {
         $('#filename').removeClass('focus');
     });
 

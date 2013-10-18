@@ -93,7 +93,7 @@ sio.sockets.on('connection', function (socket) {
             });
         });
     });
-    
+
     socket.on('requestUser', function () {
         socket.get('documentId', function (err, documentId) {
             if (err) return console.log(err);
