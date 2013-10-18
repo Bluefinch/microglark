@@ -90,6 +90,7 @@ sio.sockets.on('connection', function (socket) {
         socket.set('documentId', data.documentId, function () {
             socket.set('userId', data.userId, function () {
                 socket.join(data.documentId);
+                socket.emit('joined');
             });
         });
     });

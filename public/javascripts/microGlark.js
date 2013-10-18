@@ -72,20 +72,16 @@ var modeHelper = function () {
     };
 }();
 
-var getOrMakerUser = function (editor, userId) {
-    var user = users[userId];
-    if (user === undefined) {
-        user = makeUser(editor, userId);
-        users[userId] = user;
-    }
-    return user;
-};
-
 var makeUser = function () {
 
-    var User = function (editor, userId) {
+    var User = function (editor, userId, userColor) {
         this._editor = editor;
         this._userId = userId;
+        this._timeout = null;
+        this._location = {
+            row: -1,
+            column: -1
+        };
 
         this.$icon = $('<div class="user"></div>');
         this.$icon.appendTo('#users');
@@ -96,12 +92,8 @@ var makeUser = function () {
             '</div>');
         this.$markup.appendTo('body');
         this.$markup.hide();
-
-        this._location = {
-            row: -1,
-            column: -1
-        };
-        this._timeout = null;
+        
+        this.setColor(userColor);
 
         var _this = this;
         this.$icon.click(function () {
@@ -121,17 +113,14 @@ var makeUser = function () {
     };
 
     User.prototype.setColor = function (color) {
+        this._color = color;
         this.$markup.children('.collaboration-selection').css('background-color', color);
         this.$markup.children('.collaboration-selection-tooltip').css('background-color', color);
         this.$icon.css('background-color', color);
     };
 
     User.prototype.setLocation = function (location) {
-        if (location.row !== -1 && location.column !== -1) {
-            this.$markup.show();
-        } else {
-            this.$markup.hide();
-        }
+        this.$markup.show();
         this._location = location;
         this.updateLocation();
     };
@@ -180,8 +169,8 @@ var makeUser = function () {
         }
     };
 
-    return function (editor, userId) {
-        return new User(editor, userId);
+    return function (editor, userId, userColor) {
+        return new User(editor, userId, userColor);
     };
 }();
 
@@ -226,7 +215,6 @@ var notifySelection = function () {
     var selection = editor.getSelection().getRange();
     socket.emit('notifySelection', {
         userId: userId,
-        userColor: userColor,
         selection: selection
     });
 };
@@ -388,48 +376,47 @@ $(function () {
     editor.getSession().setTabSize(4);
     editor.setTheme("ace/theme/glarkio_black");
 
-    /* Initialize sharejs. */
-    sharejs.open(documentId, 'text', function (error, doc) {
-        if (error) {
-            console.error(error);
-            return;
-        }
-        if (doc.created) {
-            doc.insert(0, defaultFile.getContent());
-            setFilename(defaultFile.filename);
-        } else {
-            socket.emit('requestFilename');
-        }
-        doc.attach_ace(editor);
-        editor.session.setScrollTop(0);
-        editor.setReadOnly(false);
-
-        window.sharedDocument = doc;
-
-        editor.getSelection().on('changeCursor', notifySelection);
-        editor.getSelection().on('changeSelection', notifySelection);
-
-        requestSelection();
-    });
-
     /* Socket.io events. */
     socket.on('connect', function () {
         socket.emit('join', {
             documentId: documentId,
             userId: userId
         });
+    });
+    
+    socket.on('joined', function () {
+        notifyUser();
+        requestUser();
         
-        /* Notify. */
-        setTimeout(function () {
-            notifyUser();
-            requestUser();
-        }, 100);
+        /* Initialize sharejs. */
+        sharejs.open(documentId, 'text', function (error, doc) {
+            if (error) {
+                console.error(error);
+                return;
+            }
+            if (doc.created) {
+                doc.insert(0, defaultFile.getContent());
+                setFilename(defaultFile.filename);
+            } else {
+                socket.emit('requestFilename');
+            }
+            doc.attach_ace(editor);
+            editor.session.setScrollTop(0);
+            editor.setReadOnly(false);
+    
+            window.sharedDocument = doc;
+    
+            editor.getSelection().on('changeCursor', notifySelection);
+            editor.getSelection().on('changeSelection', notifySelection);
+    
+            requestSelection();
+            notifySelection();
+        });
     });
 
     socket.on('notifySelection', function (data) {
-
-        var user = getOrMakerUser(editor, data.userId);
-        user.setColor(data.userColor);
+        var user = users[data.userId];
+        if (!user) return;
 
         /* Check if the selection has changed. */
         var location = user.getLocation();
@@ -449,8 +436,10 @@ $(function () {
     });
 
     socket.on('notifyUser', function (data) {
-        var user = getOrMakerUser(editor, data.userId);
-        user.setColor(data.userColor);
+        if(!users[data.userId]) {
+            var user = makeUser(editor, data.userId, data.userColor);
+            users[data.userId] = user;
+        }
     });
 
     socket.on('requestFilename', function () {
