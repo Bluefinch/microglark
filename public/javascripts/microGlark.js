@@ -98,6 +98,7 @@ var makeUser = function () {
         var _this = this;
         this.$icon.click(function () {
             _this.showLine();
+            _this.showTooltip(500);
         });
         this.$markup.on('mouseenter', function () {
             _this.showTooltip();
@@ -479,6 +480,10 @@ $(function () {
             user.updateLocation();
         });
     });
+    
+     $('#filename').click(function () {
+        $(this).find('.text').focus();
+    });
 
     $('#filename .text').focus(function () {
         $('#filename').addClass('focus');
@@ -486,6 +491,22 @@ $(function () {
 
     $('#filename .text').blur(function () {
         $('#filename').removeClass('focus');
+    });
+    
+    $('#filename .text').blur(function () {
+        var filename = $(this).html();
+        setFilename(filename);
+        socket.emit('notifyFilename', filename);
+    });
+    
+    $('#filename .text').keypress(function (event) {
+        if (event.which === 13) {
+            event.preventDefault();
+            var filename = $(this).html();
+            setFilename(filename);
+            socket.emit('notifyFilename', filename);
+            editor.focus();
+        }
     });
 
     $('#download').click(function (event) {
@@ -496,22 +517,6 @@ $(function () {
     $('#beautify').click(function (event) {
         event.preventDefault();
         beautifyDocument();
-    });
-
-    $('#filename .text').blur(function () {
-        var filename = $(this).html();
-        setFilename(filename);
-        socket.emit('notifyFilename', filename);
-    });
-
-    $('#filename .text').keypress(function (event) {
-        if (event.which === 13) {
-            event.preventDefault();
-            var filename = $(this).html();
-            setFilename(filename);
-            socket.emit('notifyFilename', filename);
-            editor.focus();
-        }
     });
 
     /* Make the body a drop zone. */

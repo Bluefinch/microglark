@@ -132,6 +132,7 @@ a {
     padding: 6px 12px;
     color: white;
     font-weight: bold;
+    cursor: pointer;
 }
 
 #filename:hover,
@@ -186,14 +187,14 @@ a {
 
 .collaboration-selection {
     width: 2px;
+    height: 14px;
     background-color: #ff7567;
-    height: 12pt;
 }
 
 .collaboration-selection-tooltip {
     display: none;
     position: relative;
-    top: -24pt;
+    top: -28px;
     padding: 0 3px;
     background-color: #ff7567;
 }
