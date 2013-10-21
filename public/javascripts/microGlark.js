@@ -361,6 +361,8 @@ var downloadDocument = function () {
 };
 
 $(function () {
+    var startTime = new Date().getTime();
+
     window.userId = makeRandomHash(5);
     window.userColor = peekRandomColor();
 
@@ -417,6 +419,10 @@ $(function () {
 
             requestSelection();
             notifySelection();
+
+            var endTime = new Date().getTime();
+            var loadingTime = endTime - startTime;
+            ga('send', 'timing', 'loading', 'initializing', loadingTime);
         });
     });
 
