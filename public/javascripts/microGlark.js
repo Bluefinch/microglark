@@ -92,12 +92,12 @@ var makeUser = function () {
             '</div>');
         this.$markup.appendTo('body');
         this.$markup.hide();
-        
+
         /* Adjust cursor height. */
         var height = editor.renderer.lineHeight;
         this.$markup.find('.collaboration-selection').height(height);
         this.$markup.find('.collaboration-selection-tooltip').css('top', '-' + (height + 16) + 'px');
-        
+
         this.setColor(userColor);
 
         var _this = this;
@@ -168,7 +168,7 @@ var makeUser = function () {
             }, duration);
         }
     };
-    
+
     User.prototype.showLine = function () {
         if (this._location.row !== -1) {
             this._editor.gotoLine(this._location.row + 1);
@@ -389,11 +389,11 @@ $(function () {
             userId: userId
         });
     });
-    
+
     socket.on('joined', function () {
         notifyUser();
         requestUser();
-        
+
         /* Initialize sharejs. */
         sharejs.open(documentId, 'text', function (error, doc) {
             if (error) {
@@ -409,12 +409,12 @@ $(function () {
             doc.attach_ace(editor);
             editor.session.setScrollTop(0);
             editor.setReadOnly(false);
-    
+
             window.sharedDocument = doc;
-    
+
             editor.getSelection().on('changeCursor', notifySelection);
             editor.getSelection().on('changeSelection', notifySelection);
-    
+
             requestSelection();
             notifySelection();
         });
@@ -442,7 +442,7 @@ $(function () {
     });
 
     socket.on('notifyUser', function (data) {
-        if(!users[data.userId]) {
+        if (!users[data.userId]) {
             var user = makeUser(editor, data.userId, data.userColor);
             users[data.userId] = user;
         }
@@ -478,15 +478,15 @@ $(function () {
             user.updateLocation();
         });
     });
-    
-    editor.session.on("changeScrollTop", function(scrollTop) {
+
+    editor.session.on("changeScrollTop", function () {
         Object.keys(users).forEach(function (userId) {
             var user = users[userId];
             user.updateLocation();
         });
     });
-    
-     $('#filename').click(function () {
+
+    $('#filename').click(function () {
         $(this).find('.text').focus();
     });
 
@@ -497,13 +497,13 @@ $(function () {
     $('#filename .text').blur(function () {
         $('#filename').removeClass('focus');
     });
-    
+
     $('#filename .text').blur(function () {
         var filename = $(this).html();
         setFilename(filename);
         socket.emit('notifyFilename', filename);
     });
-    
+
     $('#filename .text').keypress(function (event) {
         if (event.which === 13) {
             event.preventDefault();
