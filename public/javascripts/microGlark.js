@@ -377,6 +377,7 @@ $(function () {
     var editor = window.editor = ace.edit("editor");
     editor.setReadOnly(true);
     editor.setShowPrintMargin(false);
+    editor.setOption('scrollPastEnd', true);
     editor.getSession().setUseWrapMode(true);
     editor.getSession().setUseSoftTabs(true);
     editor.getSession().setTabSize(4);
