@@ -194,8 +194,11 @@ a {
 .collaboration-selection-tooltip {
     display: none;
     position: relative;
+    height: 16px;
     top: -28px;
     padding: 0 3px;
+    font-size: 14px;
+    border-radius: 2px 2px 2px 0;
     background-color: #ff7567;
 }
 

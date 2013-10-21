@@ -93,6 +93,11 @@ var makeUser = function () {
         this.$markup.appendTo('body');
         this.$markup.hide();
         
+        /* Adjust cursor height. */
+        var height = editor.renderer.lineHeight;
+        this.$markup.find('.collaboration-selection').height(height);
+        this.$markup.find('.collaboration-selection-tooltip').css('top', '-' + (height + 16) + 'px');
+        
         this.setColor(userColor);
 
         var _this = this;
