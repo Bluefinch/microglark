@@ -112,9 +112,10 @@ a {
     margin-top: 10px;
     margin-left: 10px;
     cursor: pointer;
+    text-align: center;
 }
 
-#header .user {
+#users .user {
     display: inline-block;
     float: left;
     width: 17px;
@@ -122,6 +123,13 @@ a {
     margin-right: 5px;
     border-radius: 2px;
     background: #ff7567;
+}
+
+#users .writing {
+    padding-top: 5px;
+    display: inline-block;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.25);
 }
 
 #filename {

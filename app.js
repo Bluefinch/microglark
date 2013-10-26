@@ -137,6 +137,13 @@ sio.sockets.on('connection', function (socket) {
         });
     });
 
+    socket.on('notifyWriting', function (data) {
+        socket.get('documentId', function (err, documentId) {
+            if (err) return console.log(err);
+            socket.broadcast.to(documentId).emit('notifyWriting', data);
+        });
+    });
+
     socket.on('disconnect', function () {
         socket.get('documentId', function (err, documentId) {
             if (err) return console.log(err);

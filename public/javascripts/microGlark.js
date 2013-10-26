@@ -1,5 +1,5 @@
 /* global io, ace, sharejs, $, editor, socket, userId, userColor, documentId, escape, users,
-FileReader, sharedDocument, currentFilename, defaultFile, Blob, saveAs */
+FileReader, sharedDocument, currentFilename, defaultFile, Blob, saveAs, ga */
 'use strict';
 
 window.users = {};
@@ -77,14 +77,18 @@ var makeUser = function () {
     var User = function (editor, userId, userColor) {
         this._editor = editor;
         this._userId = userId;
-        this._timeout = null;
+        this._tooltipTimeout = null;
+        this._writingTimeout = null;
         this._location = {
             row: -1,
             column: -1
         };
 
-        this.$icon = $('<div class="user"></div>');
+        this.$icon = $('<div class="user"><i class="writing icon-ellipsis-horizontal"></i></div>');
         this.$icon.appendTo('#users');
+
+        this.$writing = this.$icon.children('.writing');
+        this.$writing.hide();
 
         this.$markup = $('<div class="collaboration-selection-wrapper">' +
             '<div class="collaboration-selection"></div>' +
@@ -92,6 +96,8 @@ var makeUser = function () {
             '</div>');
         this.$markup.appendTo('body');
         this.$markup.hide();
+
+        this.$tooltip = this.$markup.children('.collaboration-selection-tooltip');
 
         /* Adjust cursor height. */
         var height = editor.renderer.lineHeight;
@@ -146,33 +152,37 @@ var makeUser = function () {
         });
     };
 
-    User.prototype.hideTooltip = function () {
-        this.$markup.children('.collaboration-selection-tooltip').fadeOut('fast');
-        this._timeout = null;
-    };
-
-    /* Show the markup tooltip. If duration is defined, the
-     * tooltip is automaticaly hidden when the time is elapsed. */
-    User.prototype.showTooltip = function (duration) {
-        if (this._timeout !== null) {
-            clearTimeout(this._timeout);
-            this._timeout = null;
-        }
-
-        this.$markup.children('.collaboration-selection-tooltip').fadeIn('fast');
-
-        if (duration !== undefined) {
-            var _this = this;
-            this._timeout = setTimeout(function () {
-                _this.hideTooltip();
-            }, duration);
-        }
-    };
-
     User.prototype.showLine = function () {
         if (this._location.row !== -1) {
             this._editor.gotoLine(this._location.row + 1);
         }
+    };
+
+    /* Show the markup tooltip. If duration is defined, the tooltip
+     * is automaticaly hidden when the time is elapsed. */
+    User.prototype.showTooltip = function (duration) {
+        clearTimeout(this._tooltipTimeout);
+        this.$tooltip.fadeIn('fast');
+
+        if (duration !== undefined) {
+            var _this = this;
+            this._tooltipTimeout = setTimeout(function () {
+                _this.$tooltip.fadeOut('fast');
+            }, duration);
+        }
+    };
+
+    /* Show writing icon. The icon is automaticaly hidden 
+     * when the time is elapsed. */
+    User.prototype.showWriting = function (duration) {
+        duration = duration || 1500;
+        clearTimeout(this._writingTimeout);
+        this.$writing.fadeIn('fast');
+
+        var _this = this;
+        this._writingTimeout = setTimeout(function () {
+            _this.$writing.fadeOut('fast');
+        }, duration);
     };
 
     return function (editor, userId, userColor) {
@@ -227,6 +237,12 @@ var notifySelection = function () {
 
 var requestSelection = function () {
     socket.emit('requestSelection');
+};
+
+var notifyWriting = function () {
+    socket.emit('notifyWriting', {
+        userId: userId
+    });
 };
 
 var getAceMode = function (filename) {
@@ -417,6 +433,12 @@ $(function () {
             editor.getSelection().on('changeCursor', notifySelection);
             editor.getSelection().on('changeSelection', notifySelection);
 
+            editor.keyBinding.origOnTextInput = editor.keyBinding.onTextInput;
+            editor.keyBinding.onTextInput = function (text) {
+                notifyWriting();
+                this.origOnTextInput(text);
+            };
+
             requestSelection();
             notifySelection();
 
@@ -452,6 +474,11 @@ $(function () {
             var user = makeUser(editor, data.userId, data.userColor);
             users[data.userId] = user;
         }
+    });
+
+    socket.on('notifyWriting', function (data) {
+        var user = users[data.userId];
+        if (user) user.showWriting();
     });
 
     socket.on('requestFilename', function () {
