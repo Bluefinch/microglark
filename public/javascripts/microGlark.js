@@ -38,7 +38,7 @@ var modeHelper = function () {
         pgsql: ["pgSQL", "pgsql"],
         php: ["PHP", "php|phtml"],
         powershell: ["Powershell", "ps1"],
-        python: ["Python", "py", "pyw"],
+        python: ["Python", "py|pyw"],
         ruby: ["Ruby", "ru|gemspec|rake|rb"],
         scad: ["OpenSCAD", "scad"],
         scala: ["Scala", "scala"],
