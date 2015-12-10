@@ -1,19 +1,31 @@
 {
-  "name": "application-name",
-  "version": "0.0.1",
+  "name": "microglark",
+  "version": "0.0.2",
   "private": true,
   "scripts": {
-    "start": "node app.js"
+    "start": "grunt build && node app.js",
+    "watch": "grunt build && (grunt watch &) && node app.js"
   },
   "dependencies": {
-    "express": "3.3.4",
-    "jade": "*",
-    "share": "~0.6.3",
-    "socket.io": "~0.9.16",
-    "grunt": "~0.4.1"
+    "autoprefixer": "^6.1.2",
+    "body-parser": "^1.14.1",
+    "compression": "^1.6.0",
+    "cssnano": "^3.4.0",
+    "errorhandler": "^1.4.2",
+    "express": "^4.13.3",
+    "jade": "^1.11.0",
+    "method-override": "^2.3.5",
+    "serve-favicon": "^2.3.0",
+    "share": "^0.6.0",
+    "socket.io": "^1.3.7"
   },
   "devDependencies": {
-    "grunt-jsbeautifier": "~0.1.9",
-    "grunt-contrib-jshint": "~0.6.4"
+    "grunt": "^0.4.1",
+    "grunt-contrib-clean": "^0.7.0",
+    "grunt-contrib-copy": "^0.8.2",
+    "grunt-contrib-jshint": "~0.11.3",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-jsbeautifier": "~0.2.10",
+    "grunt-postcss": "^0.7.1"
   }
 }

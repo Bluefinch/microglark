@@ -1,71 +1,141 @@
-/* Layout */
+/* Global */
 
-#container {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 50%;
+html, body, .Container  {
+    height: 100%;
+}
+
+body {
+    font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+    background-color: #333;
+    color: white;
+}
+
+a {
+    text-decoration: initial;
+    color: white;
+}
+
+/* Container */
+
+.Container {
+    display: flex;
+    flex-direction: column;
+    
+    max-width: 1130px;
+    margin: 0 auto;
     
     background-color: #383838;
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
 }
 
-#header {
-    position: absolute;
-    top: 0;
-    height: 35px;
-    width: 100%;
-    
-    overflow: hidden;
+/* Header */
+
+.Header {
+    display: flex;
     border-bottom: 2px solid #33555E;
 }
 
-#editor {
-    position: absolute;
-    top: 37px;
-    bottom: 37px;
-    width: 100%;
+.Header a {
+    padding: 10px 15px;
+    font-size: 14px;
 }
 
-#footer {
-    position: absolute;
-    height: 35px;
-    bottom: 0;
-    width: 100%;
-    
-    overflow: hidden;
+.Header a:hover {
+    background-color: #33555E;
+}
+
+.Header--filename {
+    align-items: center;
+
+    min-width: 3px;
+    padding: 6px 12px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.Header--filename:hover,
+.Header--filename:focus,
+.Header--filename.focus {
+    background-color: #33555E;
+}
+
+.Header--filename .text {
+    padding: 4px;
+    cursor: pointer;
+}
+
+.Header--filename .text:focus {
+    outline: none;
+    cursor: text;
+    border-radius: 3px;
+    background-color: #333;
+    box-shadow: inset 0 0 2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.Header--users {
+    display: flex;
+    margin: 10px 7px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.Header--users > .user {
+    margin: 0 3px;
+    width: 17px;
+    height: 17px;
+    border-radius: 2px;
+    background: #ff7567;
+}
+
+.Header--users > .user > .writing {
+    padding-top: 5px;
+    display: inline-block;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.Header--actions {
+    display: flex;
+    margin-left: auto;
+}
+
+/* Editor */
+
+.Editor {
+    flex: 1;
+}
+
+/* Footer */
+
+.Footer {
+    display: flex;
+    align-items: center;
+
+    padding: 10px;
     border-top: 2px solid #33555E;
 }
 
-#container {
-    width: 100%;
-    margin-left: -50%;
+.Footer a {
+    margin-left: 10px;
+    color: #686868;
 }
 
-@media (min-width: 768px) {
-    #container {
-        width: 720px;
-        margin-left: -360px;
-    }
+.Footer a:hover {
+    color: #B3B3B3;
 }
 
-@media (min-width: 992px) {
-    #container {
-        width: 910px;
-        margin-left: -455px;
-    }
+.Footer--item {
+    margin: 0 5px;
 }
 
-@media (min-width: 1200px) {
-    #container {
-        width: 1130px;
-        margin-left: -565px;
-    }
+.Footer--item.m-about {
+    flex: 1
 }
 
 /* Ace */
 
-@media (min-width: 768px) {
+@media (min-width: 1130px) {
     .ace_content {
         width: 100% !important;
     }
@@ -79,110 +149,6 @@
     .ace_scroller {
         right: 0 !important;
     }
-}
-
-/* Style */
-
-body {
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-  background-color: #333;
-  color: white;
-}
-
-a {
-    text-decoration: initial;
-    color: white;
-}
-
-#header a {
-    display: inline-block;
-    float: right;
-    height: 35px;
-    padding: 10px 15px;
-    font-size: 14px;
-}
-
-#header a:hover {
-    background-color: #33555E;
-}
-
-#users {
-    display: inline-block;
-    float: left;
-    margin-top: 10px;
-    margin-left: 10px;
-    cursor: pointer;
-    text-align: center;
-}
-
-#users .user {
-    display: inline-block;
-    float: left;
-    width: 17px;
-    height: 17px;
-    margin-right: 5px;
-    border-radius: 2px;
-    background: #ff7567;
-}
-
-#users .writing {
-    padding-top: 5px;
-    display: inline-block;
-    color: rgba(255, 255, 255, 0.8);
-    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.25);
-}
-
-#filename {
-    display: inline-block;
-    float: left;
-    height: 35px;
-    min-width: 3px;
-    padding: 6px 12px;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-#filename:hover,
-#filename:focus,
-#filename.focus {
-    background-color: #33555E;
-}
-
-#filename .text {
-    padding: 4px;
-    cursor: pointer;
-}
-
-#filename .text:focus {
-    outline: none;
-    
-    cursor: text;
-    border-radius: 3px;
-    background-color: #333;
-    box-shadow: inset 0 0 2px 0 rgba(0, 0, 0, 0.25);
-}
-
-#footer a {
-    float: left;
-    margin-top: 10px;
-    margin-left: 10px;
-    color: #686868;
-}
-
-#footer a:hover {
-    color: #B3B3B3;
-}
-
-#footer .star {
-    float: right;
-    margin-top: 8px;
-}
-
-#twitter {
-    float: right;
-    margin-top: 8px;
-    width: 92px !important;
 }
 
 /* Collaboration */

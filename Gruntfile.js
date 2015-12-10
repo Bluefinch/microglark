@@ -12,6 +12,31 @@ module.exports = function (grunt) {
             'public/javascripts/*.js'
         ],
 
+        clean: {
+            main: ["www"]
+        },
+
+        copy: {
+            main: {
+                files: [
+                    {expand: true, src: ['public/**'], dest: 'www/'},
+                ]
+            }
+        },
+
+        postcss: {
+            options: {
+                map: true,
+                processors: [
+                    require('autoprefixer')({browsers: 'last 2 versions'}),
+                    require('cssnano')()
+                ]
+            },
+            dist: {
+                src: 'www/**/*.css'
+            }
+        },
+
         jsbeautifier: {
             files: ['<%= jsfiles %>'],
             options: {
@@ -48,11 +73,21 @@ module.exports = function (grunt) {
                 }
             },
             files: ['<%= jsfiles %>']
+        },
+
+        watch: {
+            files: ['public/**/*'],
+            tasks: ['build']
         }
     });
 
+    grunt.loadNpmTasks('grunt-postcss');
     grunt.loadNpmTasks('grunt-jsbeautifier');
     grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-contrib-copy');
+    grunt.loadNpmTasks('grunt-contrib-watch');
 
-    grunt.registerTask('default', ['jsbeautifier', 'jshint']);
+    grunt.registerTask('lint', ['jsbeautifier', 'jshint']);
+    grunt.registerTask('build', ['clean', 'copy', 'postcss']);
 };
